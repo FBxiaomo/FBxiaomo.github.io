@@ -24,3 +24,5 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+node_modules.bak/
