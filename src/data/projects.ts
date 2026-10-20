@@ -28,13 +28,4 @@ export const projects: Project[] = [
     featured: true,
     cover: '/images/digital-gallery-cover.png',
   },
-  {
-    name: '数码图鉴 · 源码',
-    desc: '数码图鉴的 GitHub 仓库：纯 HTML + CSS + JS，无构建，数据全部开源。',
-    href: 'https://github.com/FBxiaomo/digital-gallery',
-    tags: ['开源'],
-    status: 'active',
-    external: true,
-    featured: true,
-  },
 ];
