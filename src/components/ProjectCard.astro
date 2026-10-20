@@ -9,6 +9,7 @@ const statusLabel = { active: '维护中', wip: '开发中', archived: '已归�
 
 <a
   class="card"
+  data-tilt
   href={project.href}
   target={isExternal ? '_blank' : undefined}
   rel={isExternal ? 'noopener noreferrer' : undefined}
@@ -60,6 +61,22 @@ const statusLabel = { active: '维护中', wip: '开发中', archived: '已归�
     color: var(--fg);
     transition: transform .18s cubic-bezier(.22,.61,.36,1), border-color .18s ease, box-shadow .18s ease;
   }
+  .card { position: relative; }
+  .card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0;
+    background: radial-gradient(
+      220px circle at var(--mx, 50%) var(--my, 50%),
+      color-mix(in srgb, var(--accent) 20%, transparent),
+      transparent 65%
+    );
+    transition: opacity .3s ease;
+  }
+  .card:hover::before { opacity: 1; }
   .card:hover {
     transform: translateY(-3px);
     border-color: var(--accent);

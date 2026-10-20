@@ -40,7 +40,7 @@ const tints = [
           data-tilt
         >
           <div class="thumb" style={`background: ${p.cover ? `url(${p.cover}) center/cover` : tints[i % tints.length]}`}>
-            <span class="glyph">{p.name.slice(0, 1)}</span>
+            {!p.cover && <span class="glyph">{p.name.slice(0, 1)}</span>}
             {isExternal && <span class="ext" aria-hidden="true">↗</span>}
           </div>
           <div class="meta">
@@ -107,6 +107,7 @@ const tints = [
   .item {
     flex: 0 0 min(74vw, 300px);
     scroll-snap-align: start;
+    position: relative;
     border-radius: var(--radius-lg);
     border: 1px solid var(--line);
     background: var(--bg-card);
@@ -118,8 +119,62 @@ const tints = [
   }
   .item:hover {
     text-decoration: none;
-    box-shadow: var(--shadow-lift);
-    border-color: color-mix(in srgb, var(--accent) 42%, var(--line));
+    box-shadow: var(--shadow-lift), 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  }
+
+  /* 触摸感光效：跟随鼠标的径向高光 */
+  .item::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0;
+    background: radial-gradient(
+      220px circle at var(--mx, 50%) var(--my, 50%),
+      color-mix(in srgb, var(--accent) 20%, transparent),
+      transparent 65%
+    );
+    transition: opacity .3s ease;
+  }
+  .item:hover::before { opacity: 1; }
+
+  /* 边框流光：一条高光沿卡片边缘缓慢扫过 */
+  .item::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      120deg,
+      transparent 30%,
+      color-mix(in srgb, var(--accent) 55%, transparent) 48%,
+      color-mix(in srgb, var(--accent) 10%, transparent) 52%,
+      transparent 70%
+    );
+    background-size: 250% 250%;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity .35s ease;
+  }
+  .item:hover::after {
+    opacity: 1;
+    animation: borderSheen 1.6s linear infinite;
+  }
+  @keyframes borderSheen {
+    from { background-position: 200% 0; }
+    to { background-position: -60% 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .item:hover::after { opacity: 0; animation: none; }
   }
 
   .thumb {

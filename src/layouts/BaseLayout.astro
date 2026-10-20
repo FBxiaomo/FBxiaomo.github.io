@@ -79,7 +79,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 
       // ---- 卡片倾斜 + 聚光（幅度很小，只做"活"的感觉） ----
       if (!reduced && matchMedia('(pointer: fine)').matches) {
-        const MAX = 3;
+        const MAX = 6;
         document.querySelectorAll('[data-tilt]').forEach((card) => {
           card.addEventListener('pointermove', (e) => {
             const r = card.getBoundingClientRect();
@@ -90,7 +90,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
             const rx = (0.5 - py) * MAX;
             const ry = (px - 0.5) * MAX;
             card.style.transform =
-              'perspective(1000px) rotateX(' + rx.toFixed(2) + 'deg) rotateY(' + ry.toFixed(2) + 'deg) translateY(-2px)';
+              'perspective(1000px) rotateX(' + rx.toFixed(2) + 'deg) rotateY(' + ry.toFixed(2) + 'deg) translateY(-4px)';
           });
           card.addEventListener('pointerleave', () => {
             card.style.transform = '';
