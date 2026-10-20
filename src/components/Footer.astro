@@ -3,7 +3,8 @@ import { site } from '@/data/site';
 const year = new Date().getFullYear();
 ---
 
-<footer class="site-footer">
+<footer class="site-footer" data-footer-glow>
+  <div class="footer-glow" aria-hidden="true"></div>
   <div class="wrap">
     <div class="footer-line">
       <span>© {year} {site.name}</span>
@@ -22,6 +23,31 @@ const year = new Date().getFullYear();
 </footer>
 
 <style>
+  .site-footer {
+    position: relative;
+    overflow: hidden;
+  }
+  .footer-glow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      380px 180px at var(--fx, 50%) var(--fy, 50%),
+      color-mix(in srgb, var(--accent) 18%, transparent),
+      transparent 70%
+    );
+    opacity: 0;
+    transition: opacity .5s ease;
+  }
+  .site-footer:hover .footer-glow,
+  .footer-glow.on {
+    opacity: 1;
+  }
+  .footer-glow.on { opacity: 1; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .footer-glow { opacity: .3; background: radial-gradient(300px 140px at 50% 50%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%); }
+  }
   .site-footer {
     margin-top: 96px;
     padding: 32px 0 48px;
@@ -43,4 +69,26 @@ const year = new Date().getFullYear();
     gap: 14px;
   }
   .footer-sub a { color: var(--fg-faint); }
+
+<script>
+  const footer = document.querySelector('[data-footer-glow]');
+  const glow = footer?.querySelector('.footer-glow');
+  if (footer && glow) {
+    let raf = 0;
+    footer.addEventListener('pointermove', (e) => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const r = footer.getBoundingClientRect();
+        glow.style.setProperty('--fx', ((e.clientX - r.left) / r.width * 100) + '%');
+        glow.style.setProperty('--fy', ((e.clientY - r.top) / r.height * 100) + '%');
+      });
+    });
+    footer.addEventListener('pointerleave', () => {
+      glow.classList.remove('on');
+    });
+    footer.addEventListener('pointerenter', () => {
+      glow.classList.add('on');
+    });
+  }
+</script>
 </style>

@@ -65,7 +65,28 @@ const prev = all[idx - 1];
 </BaseLayout>
 
 <style>
-  .post { padding-top: 56px; }
+  .post {
+    padding-top: 56px;
+    /* 磨砂底板：隔开背景流动词，提升正文可读性 */
+    background: color-mix(in srgb, var(--bg) 16%, transparent);
+    backdrop-filter: saturate(150%) blur(12px);
+    -webkit-backdrop-filter: saturate(150%) blur(12px);
+    border: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    margin-top: 24px;
+    margin-bottom: 24px;
+    padding-left: 40px;
+    padding-right: 40px;
+    padding-bottom: 44px;
+  }
+
+  /* 浏览器不支持 backdrop-filter 时退化为更实的底色 */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .post {
+      background: color-mix(in srgb, var(--bg) 94%, transparent);
+    }
+  }
 
   .post-head {
     margin-bottom: 36px;
@@ -159,7 +180,15 @@ const prev = all[idx - 1];
   }
 
   @media (max-width: 620px) {
-    .post { padding-top: 36px; }
+    .post {
+      padding-top: 36px;
+      padding-left: 18px;
+      padding-right: 18px;
+      padding-bottom: 28px;
+      border-radius: var(--radius);
+      margin-top: 12px;
+      margin-bottom: 12px;
+    }
     .post-title { font-size: 25px; }
     .prose :global(h2) { font-size: 20px; }
     .pager { grid-template-columns: 1fr; }

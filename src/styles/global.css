@@ -226,11 +226,16 @@ th { background: var(--bg-soft); font-weight: 600; }
 .rise > span {
   display: block;
   overflow: hidden;
+  /* 给字形富余量：全角标点的右缘、笔画下缘可能超出 em-box */
+  padding-right: 0.14em;
+  padding-bottom: 0.08em;
+  margin-right: -0.14em;
+  margin-bottom: -0.08em;
 }
 .rise > span > i {
   display: block;
   font-style: normal;
-  transform: translateY(105%);
+  transform: translateY(108%);
   transition: transform 1s var(--ease);
 }
 .rise.in > span > i { transform: none; }

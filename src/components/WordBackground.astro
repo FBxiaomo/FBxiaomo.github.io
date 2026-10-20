@@ -1,0 +1,230 @@
+---
+/**
+ * 多语言词汇背景
+ *
+ * 全屏散点粒子：每个词随机位置、字号（景深）、速度、方向，
+ * 靠近上下边缘的词带真实 blur，中间清晰。
+ * 页面滚动时按缓出曲线 (1-p)^2.2 整体淡出，页脚处完全消失。
+ * 每次加载随机组合词库；出屏后自动换新词循环。
+ * 指针完全落在某词上时高亮（染色 + 微光晕），只改视觉不影响运动。
+ *
+ * 降级：
+ * - prefers-reduced-motion：静态渲染一屏，不滚动
+ * - 移动端 pointer:coarse：减少词量
+ */
+---
+
+<div class="word-bg" id="wordBg" aria-hidden="true"></div>
+
+<style>
+  .word-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+    opacity: 1;
+    will-change: opacity;
+  }
+  /* span 由 JS 动态创建，没有 Astro 作用域属性，必须用 :global 穿透 */
+  .word-bg :global(span) {
+    position: absolute;
+    top: 0;
+    left: 0;
+    white-space: nowrap;
+    font-weight: 600;
+    letter-spacing: .06em;
+    user-select: none;
+    will-change: transform;
+    color: var(--fg);
+    /* 悬停高亮只走颜色/光效，transition 不含 transform，不影响运动 */
+    transition: color .35s ease, text-shadow .35s ease;
+  }
+  .word-bg :global(span.hot) {
+    color: var(--accent);
+    text-shadow:
+      0 0 6px color-mix(in srgb, var(--glow) 55%, transparent),
+      0 0 18px color-mix(in srgb, var(--glow) 30%, transparent);
+  }
+
+  /* 内容层始终盖在背景词之上（与 CursorTrail 同层规则） */
+  :global(body > header),
+  :global(body > main),
+  :global(body > footer) {
+    position: relative;
+    z-index: 2;
+  }
+</style>
+
+<script>
+  (() => {
+    // ---- 词库：22 组概念 × 多语言（爱/科技/你好/兴趣/潜力/努力 + 创造/成长/光/时间等） ----
+    const pool = [
+      ['爱','愛','사랑','Love','Amour','Liebe','Amor','Любовь','Amore','الحب','प्यार','รัก','Αγάπη','Liefde','Kärlek','Miłość','Láska','Tình yêu','Aşk','אהבה','Cinta','Upendo','Rakkaus','Kærlighed','Szerelem','Dragoste','Ljubav','Любов','அன்பு','ప్రేమ','സ്നേഹം','ভালোবাসা','Pag-ibig','Хайр'],
+      ['科技','技術','기술','Technology','Technologie','Tecnología','Технология','Tecnologia','تكنولوجيا','प्रौद्योगिकी','เทคโนโลยี','Τεχνολογία','Teknologi','Technologia','Công nghệ','Teknoloji','טכנולוגיה','فناوری','Technológia','Tehnologie','Tehnologija','Технологія','தொழில்நுட்பம்','సాంకేతికత','സാങ്കേതികവിദ്യ','প্রযুক্তি','Teknolohiya'],
+      ['你好','こんにちは','안녕하세요','Hello','Bonjour','Hallo','Hola','Привет','Ciao','Olá','مرحبا','नमस्ते','สวัสดี','Γειά σου','Hej','Cześć','Ahoj','Xin chào','Merhaba','שלום','سلام','Halo','Szia','Salut','Bok','Привіт','Здраво','வணக்கம்','హలో','ഹലോ','হ্যালো','Kamusta','Сайн уу'],
+      ['兴趣','興味','관심','Interest','Intérêt','Interesse','Interés','Интерес','اهتمام','रुचि','ความสนใจ','Ενδιαφέρον','Intresse','Zainteresowanie','Zájem','Sở thích','İlgi','עניין','Minat','Kiinnostus','Érdeklődés','Interes','Інтерес','ஆர்வம்','ఆసక్తి','താൽപ്പര്യം','আগ্রহ'],
+      ['潜力','潜在力','잠재력','Potential','Potentiel','Potenzial','Potencial','Потенциал','Potenziale','إمكانية','क्षमता','ศักยภาพ','Δυναμικό','Potentieel','Potencjał','Potenciál','Tiềm năng','Potansiyel','פוטנציאל','پتانسیل','Potensi','Potentiaali','Potensial','Potențial','Potencijal','Потенціал','திறன்','సామర్థ్యం','സാധ്യത','সম্ভাবনা','Potensyal','Боломж'],
+      ['努力','노력','Effort','Bemühung','Esfuerzo','Усилие','Sforzo','Esforço','جهد','प्रयास','ความพยายาม','Προσπάθεια','Inspanning','Ansträngning','Wysiłek','Úsilí','Nỗ lực','Çaba','מאמץ','تلاش','Upaya','Ponnistus','Indsats','Erőfeszítés','Efort','Napor','Зусилля','முயற்சி','ప్రయత్నం','ശ്രമം','প্রচেষ্টা','Pagsisikap','Хичээл'],
+      // ---- 创造与灵感 ----
+      ['梦想','夢','꿈','Dream','Rêve','Traum','Sueño','Sogno','Sonho','Мечта','Όνειρο','حلم','خواب','सपना','ความฝัน','Sen','Marzenie','Álom','Rüya','חלום','Giấc mơ','Mimpi','Unelma','Drøm','Dröm'],
+      ['创造','創造','창조','Create','Créer','Crear','Criar','Creare','Создавать','Δημιουργώ','خلق','बनाना','สร้าง','Yaratmak','Tạo ra','Tworzyć','Alkotni','ליצור'],
+      ['故事','物語','이야기','Story','Histoire','Geschichte','Historia','Storia','História','История','Ιστορία','قصة','कहानी','เรื่องเล่า','Hikâye','Câu chuyện','Opowieść','Příběh','Történet','סיפור'],
+      ['灵感','霊感','영감','Inspiration','Inspiration','Inspiración','Ispirazione','Inspiração','Вдохновение','Έμπνευση','إلهام','प्रेरणा','แรงบันดาลใจ','İlham','Cảm hứng','Inspirace','Inspirație','השראה'],
+      // ---- 成长与好奇 ----
+      ['好奇','好奇心','호기심','Curiosity','Curiosité','Neugier','Curiosidad','Curiosità','Curiosidade','Любопытство','Περιέργεια','فضول','जिज्ञासा','ความอยากรู้','Merak','Tò mò','Ciekawość','Zvědavost','Kíváncsiság','סקרנות'],
+      ['自由','自由','자유','Freedom','Liberté','Freiheit','Libertad','Libertà','Liberdade','Свобода','Ελευθερία','حرية','स्वतंत्रता','อิสระ','Özgürlük','Tự do','Wolność','Svoboda','Szabadság','חופש'],
+      ['成长','成長','성장','Growth','Croissance','Wachstum','Crecimiento','Crescita','Crescimento','Рост','Ανάπτυξη','نمو','विकास','การเติบโต','Büyüme','Tăng trưởng','Wzrost','Růst','Növekedés','צמיחה'],
+      // ---- 光与日常 ----
+      ['光','光','빛','Light','Lumière','Licht','Luz','Luce','Luz','Свет','Φως','نور','प्रकाश','แสง','Işık','Ánh sáng','Światło','Světlo','Fény','אור'],
+      ['星','星','별','Star','Étoile','Stern','Estrella','Stella','Estrela','Звезда','Αστέρι','نجم','तारा','ดาว','Yıldız','Ngôi sao','Gwiazda','Hvězda','Csillag','כוכב'],
+      ['咖啡','珈琲','커피','Coffee','Café','Kaffee','Café','Caffè','Café','Кофе','Καφές','قهوة','कॉफ़ी','กาแฟ','Kahve','Cà phê','Kawa','Káva','Kávé','קפה'],
+      ['音乐','音楽','음악','Music','Musique','Musik','Música','Musica','Música','Музыка','Μουσική','موسيقى','संगीत','ดนตรี','Müzik','Âm nhạc','Muzyka','Hudba','Zene','מוזיקה'],
+      // ---- 时间与连接 ----
+      ['时间','時間','시간','Time','Temps','Zeit','Tiempo','Tempo','Tempo','Время','Χρόνος','وقت','समय','เวลา','Zaman','Thời gian','Czas','Čas','Idő','זמן'],
+      ['记忆','記憶','기억','Memory','Mémoire','Erinnerung','Memoria','Memoria','Memória','Память','Μνήμη','ذاكرة','स्मृति','ความทรงจำ','Hafıza','Ký ức','Pamięć','Paměť','Emlékezet','זיכרון'],
+      ['朋友','友達','친구','Friend','Ami','Freund','Amigo','Amico','Amigo','Друг','Φίλος','صديق','मित्र','เพื่อน','Arkadaş','Bạn bè','Przyjaciel','Přítel','Barát','חבר'],
+      ['世界','世界','세상','World','Monde','Welt','Mundo','Mondo','Mundo','Мир','Κόσμος','عالم','विश्व','โลก','Dünya','Thế giới','Świat','Svět','Világ','עולם'],
+    ];
+
+    const bg = document.getElementById('wordBg') as HTMLElement | null;
+    if (!bg) return;
+
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const coarse = matchMedia('(pointer: coarse)').matches;
+
+    // 指针位置；pointer:fine 之外禁用悬停高亮
+    let mx = -1e9, my = -1e9;
+    const canHover = matchMedia('(hover: hover) and (pointer: fine)').matches;
+    if (canHover) {
+      addEventListener('pointermove', (e: PointerEvent) => {
+        mx = e.clientX; my = e.clientY;
+      }, { passive: true });
+      addEventListener('pointerleave', () => { mx = my = -1e9; }, { passive: true });
+    }
+
+    // 词量：桌面按屏幕面积，移动端减 40%
+    const base = Math.min(52, Math.max(28, Math.round(innerWidth * innerHeight / 38000)));
+    const COUNT = coarse ? Math.round(base * 0.6) : base;
+
+    interface Wd {
+      el: HTMLSpanElement;
+      x: number;      // 词左缘的 translate X
+      y: number;      // 词顶缘的 top
+      w: number;      // 词宽
+      h: number;      // 词高
+      vx: number;
+      blur: number;
+      alphaK: number;
+    }
+    let words: Wd[] = [];
+    let W = 0, H = 0;
+    let raf: number | null = null;
+    let last = 0;
+
+    const pickWord = () => {
+      const g = pool[(Math.random() * pool.length) | 0];
+      return g[(Math.random() * g.length) | 0];
+    };
+
+    function spawn(xRandom: boolean): Wd {
+      const el = document.createElement('span');
+      el.textContent = pickWord();
+
+      const depth = Math.pow(Math.random(), 0.7);            // 0 远 ~ 1 近
+      el.style.fontSize = (13 + depth * 26).toFixed(1) + 'px';
+
+      const alphaK = 0.35 + depth * 0.65;                    // 深度透明度系数
+      applyAlpha(el, alphaK);
+
+      const y = Math.random() * (H + 80) - 40;
+      el.style.top = y.toFixed(1) + 'px';
+
+      // 上下边缘真实模糊，中心 30% 清晰
+      const dist = Math.abs(y - H / 2) / (H / 2);
+      const blur = Math.pow(Math.max(0, dist - 0.30), 1.6) * 7;
+      if (blur > 0.05) el.style.filter = 'blur(' + blur.toFixed(1) + 'px)';
+
+      const dir = Math.random() < 0.5 ? 1 : -1;
+      const vx = (10 + depth * 42) * dir;
+
+      // 先入 DOM 才能量到真实尺寸；测量与定位在同一同步任务内完成，
+      // 浏览器不会在中间渲染，因此不会闪现
+      bg!.appendChild(el);
+      const w0 = el.offsetWidth, h0 = el.offsetHeight;
+      const x = xRandom
+        ? Math.random() * (W + 200) - 100
+        : (dir > 0 ? -w0 - 40 - blur * 3 : W + 40 + blur * 3);
+
+      // 关键：创建后立即定位，避免第一帧以 left:0 闪现
+      el.style.transform = 'translate3d(' + x.toFixed(1) + 'px,0,0)';
+
+      return { el, x, y, w: w0, h: h0, vx, blur, alphaK };
+    }
+
+    function applyAlpha(el: HTMLElement, k: number) {
+      const dark = document.documentElement.dataset.theme === 'dark';
+      el.style.opacity = ((dark ? 0.16 : 0.20) * k).toFixed(3);
+    }
+
+    function build() {
+      bg!.innerHTML = '';
+      W = innerWidth; H = innerHeight;
+      words = [];
+      for (let i = 0; i < COUNT; i++) words.push(spawn(true));
+    }
+
+    function tick(now: number) {
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      for (let i = 0; i < words.length; i++) {
+        const w = words[i];
+        w.x += w.vx * dt;
+        // 回收：整词 + 模糊光晕完全离屏才换新（x 是左缘坐标）
+        if ((w.vx > 0 && w.x > W + 40 + w.blur * 3) || (w.vx < 0 && w.x + w.w < -40 - w.blur * 3)) {
+          w.el.remove();
+          words[i] = spawn(false);
+          continue;
+        }
+        w.el.style.transform = 'translate3d(' + w.x.toFixed(1) + 'px,0,0)';
+      }
+      // 指针悬停高亮：指针完全落在词盒内才算命中（几何检测，层本身不接事件）
+      if (canHover) {
+        for (const w of words) {
+          const hit = mx >= w.x && mx <= w.x + w.w && my >= w.y && my <= w.y + w.h;
+          w.el.classList.toggle('hot', hit);
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    }
+
+    build();
+    if (reduced) {
+      for (const w of words) w.el.style.transform = 'translate3d(' + w.x + 'px,0,0)';
+    } else {
+      last = performance.now();
+      raf = requestAnimationFrame(tick);
+    }
+
+    // resize 只更新尺寸：越界的词会在 tick 里自然回收换新，不整层闪换
+    addEventListener('resize', () => { W = innerWidth; H = innerHeight; });
+
+    // ---- 滚动淡出：缓出曲线 (1-p)^2.2，越往下变淡越慢 ----
+    function updateFade() {
+      const scrollH = document.documentElement.scrollHeight - innerHeight;
+      if (scrollH <= 0) { bg!.style.opacity = '1'; return; }
+      const p = Math.min(1, Math.max(0, scrollY / scrollH));
+      const fade = Math.pow(1 - p, 2.2);
+      bg!.style.opacity = fade < 0.002 ? '0' : fade.toFixed(3);
+    }
+    addEventListener('scroll', updateFade, { passive: true });
+    updateFade();
+
+    // 主题切换：就地改透明度，不重建（避免整层词瞬间换掉）
+    new MutationObserver(() => {
+      for (const w of words) applyAlpha(w.el, w.alphaK);
+    }).observe(document.documentElement, {
+      attributes: true, attributeFilter: ['data-theme'],
+    });
+  })();
+</script>
