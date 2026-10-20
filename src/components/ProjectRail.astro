@@ -1,0 +1,206 @@
+---
+import type { Project } from '@/data/projects';
+
+interface Props {
+  projects: Project[];
+  title?: string;
+}
+
+const { projects, title = '作品' } = Astro.props;
+
+const statusLabel = { active: '维护中', wip: '开发中', archived: '已归档' } as const;
+
+/** 没有封面图时用一组克制的暖色渐变兜底 */
+const tints = [
+  'linear-gradient(145deg, #efe3d6, #ddc7b4)',
+  'linear-gradient(145deg, #e6e2d4, #cfd3bd)',
+  'linear-gradient(145deg, #efe0dc, #d8bfb8)',
+  'linear-gradient(145deg, #e2e5e8, #c6cdd4)',
+];
+---
+
+<section class="rail-block wrap-wide">
+  <div class="rail-head rv">
+    <h2 class="headline">{title}</h2>
+    <div class="nav">
+      <button type="button" data-dir="-1" aria-label="上一个">‹</button>
+      <button type="button" data-dir="1" aria-label="下一个">›</button>
+    </div>
+  </div>
+
+  <div class="rail rv" style="--i:1" data-rail>
+    {projects.map((p, i) => {
+      const isExternal = p.external ?? /^https?:\/\//.test(p.href);
+      return (
+        <a
+          class="item"
+          href={p.href}
+          target={isExternal ? '_blank' : undefined}
+          rel={isExternal ? 'noopener noreferrer' : undefined}
+          data-tilt
+        >
+          <div class="thumb" style={`background: ${p.cover ? `url(${p.cover}) center/cover` : tints[i % tints.length]}`}>
+            <span class="glyph">{p.name.slice(0, 1)}</span>
+            {isExternal && <span class="ext" aria-hidden="true">↗</span>}
+          </div>
+          <div class="meta">
+            <h3>
+              {p.name}
+              {p.status && <span class="tag" data-status={p.status}>{statusLabel[p.status]}</span>}
+            </h3>
+            <p>{p.desc}</p>
+          </div>
+        </a>
+      );
+    })}
+  </div>
+</section>
+
+<style>
+  .rail-block { margin: 96px auto; }
+
+  .rail-head {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    margin-bottom: 22px;
+    padding: 0 24px;
+  }
+
+  .nav {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+  }
+  .nav button {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--fg);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: all .2s var(--ease);
+  }
+  .nav button:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    transform: scale(1.06);
+  }
+
+  .rail {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: 4px 24px 24px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .rail::-webkit-scrollbar { display: none; }
+
+  .item {
+    flex: 0 0 min(74vw, 300px);
+    scroll-snap-align: start;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--line);
+    background: var(--bg-card);
+    overflow: hidden;
+    color: var(--fg);
+    transform-style: preserve-3d;
+    transition: transform .35s var(--ease), box-shadow .35s var(--ease), border-color .25s ease;
+    will-change: transform;
+  }
+  .item:hover {
+    text-decoration: none;
+    box-shadow: var(--shadow-lift);
+    border-color: color-mix(in srgb, var(--accent) 42%, var(--line));
+  }
+
+  .thumb {
+    position: relative;
+    height: 150px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+  }
+  .glyph {
+    font-family: var(--font);
+    font-size: 34px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, .5);
+    text-shadow: 0 1px 10px rgba(90, 50, 30, .14);
+    transform: translateZ(20px);
+    transition: color .3s ease, transform .4s var(--ease);
+  }
+  .item:hover .glyph { color: rgba(255, 255, 255, .72); transform: translateZ(20px) scale(1.06); }
+  .ext {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    font-size: 12px;
+    color: rgba(60, 40, 25, .45);
+  }
+
+  .meta { padding: 16px 18px 20px; }
+  .meta h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 6px;
+    font-size: 16.5px;
+    font-weight: 700;
+    letter-spacing: -0.005em;
+    transform: translateZ(14px);
+  }
+  .meta p {
+    margin: 0;
+    font-family: var(--font-ui);
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--fg-soft);
+  }
+
+  .tag {
+    font-family: var(--font-ui);
+    font-size: 10.5px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-left: auto;
+    white-space: nowrap;
+  }
+  .tag[data-status='active'] { color: #2f7d4f; background: #e6f4ec; }
+  .tag[data-status='wip'] { color: #8a5a13; background: #f7ecda; }
+  .tag[data-status='archived'] { color: var(--fg-faint); background: var(--bg-soft); }
+
+  :global([data-theme='dark']) .tag[data-status='active'] { color: #7fc99b; background: #1c2f24; }
+  :global([data-theme='dark']) .tag[data-status='wip'] { color: #d9ac5f; background: #322818; }
+
+  @media (max-width: 620px) {
+    .rail-block { margin: 64px auto; }
+    .rail-head { padding: 0 18px; }
+    .rail { padding: 4px 18px 20px; }
+    .item { flex-basis: 78vw; }
+  }
+</style>
+
+<script>
+  const rail = document.querySelector<HTMLElement>('[data-rail]');
+
+  if (rail) {
+    document.querySelectorAll<HTMLElement>('.rail-head [data-dir]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const dir = Number(btn.dataset.dir);
+        const card = rail.querySelector<HTMLElement>('.item');
+        const step = card ? card.offsetWidth + 16 : 320;
+        rail.scrollBy({ left: dir * step, behavior: 'smooth' });
+      });
+    });
+  }
+</script>

@@ -1,0 +1,85 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ProjectCard from '@/components/ProjectCard.astro';
+import { projects } from '@/data/projects';
+
+const groups = [
+  { key: 'active', title: '在做的事' },
+  { key: 'wip', title: '进行中' },
+  { key: 'archived', title: '归档' },
+] as const;
+
+const grouped = groups
+  .map((g) => ({
+    ...g,
+    items: projects.filter((p) => (p.status ?? 'active') === g.key),
+  }))
+  .filter((g) => g.items.length > 0);
+---
+
+<BaseLayout title="作品" description="我做过的项目和工具。">
+  <div class="wrap page">
+    <header class="page-head reveal">
+      <h1>作品</h1>
+      <p>一些自己写的工具、做的站点，还有没做完的东西。</p>
+    </header>
+
+    {grouped.map((g) => (
+      <section class="group reveal">
+        <h2 class="group-title">{g.title}<span class="count">{g.items.length}</span></h2>
+        <div class="grid">
+          {g.items.map((p) => <ProjectCard project={p} />)}
+        </div>
+      </section>
+    ))}
+  </div>
+</BaseLayout>
+
+<style>
+  .page { padding: 56px 0 0; }
+  .page-head { margin-bottom: 40px; }
+  .page-head h1 {
+    margin: 0 0 10px;
+    font-size: 32px;
+    letter-spacing: -0.01em;
+  }
+  .page-head p {
+    margin: 0;
+    color: var(--fg-soft);
+    font-size: 16px;
+  }
+
+  .group { margin-bottom: 40px; }
+  .group-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 16px;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--fg-soft);
+  }
+  .count {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--fg-faint);
+    background: var(--bg-soft);
+    padding: 1px 7px;
+    border-radius: 999px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 14px;
+  }
+
+  @media (max-width: 620px) {
+    .page { padding: 36px 0 0; }
+    .page-head h1 { font-size: 26px; }
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>

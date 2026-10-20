@@ -1,0 +1,118 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PostList from '@/components/PostList.astro';
+import { formatDate } from '@/utils/reading';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+
+// 按年份分组
+const byYear = new Map<number, typeof posts>();
+for (const p of posts) {
+  const y = p.data.pubDate.getFullYear();
+  if (!byYear.has(y)) byYear.set(y, []);
+  byYear.get(y)!.push(p);
+}
+const years = [...byYear.entries()].sort((a, b) => b[0] - a[0]);
+
+const tagCount = new Map<string, number>();
+for (const p of posts) for (const t of p.data.tags) tagCount.set(t, (tagCount.get(t) ?? 0) + 1);
+const tags = [...tagCount.entries()].sort((a, b) => b[1] - a[1]);
+---
+
+<BaseLayout title="博客" description="技术笔记、项目记录和一些想法。">
+  <div class="wrap page">
+    <header class="page-head reveal">
+      <h1>博客</h1>
+      <p>共 {posts.length} 篇 · 按时间倒序</p>
+    </header>
+
+    {posts.length === 0 && (
+      <p class="empty">还没有文章。在 <code>src/content/blog/</code> 里新建一个 .md 文件就能开始写。</p>
+    )}
+
+    {years.map(([year, list]) => (
+      <section class="year-block reveal">
+        <h2 class="year">{year}</h2>
+        <PostList posts={list} />
+      </section>
+    ))}
+
+    {tags.length > 0 && (
+      <div class="tag-cloud reveal">
+        <span class="tag-label mono">标签</span>
+        {tags.map(([t, n]) => <span class="tag">{t}<em>{n}</em></span>)}
+      </div>
+    )}
+  </div>
+</BaseLayout>
+
+<style>
+  .page { padding: 56px 0 0; }
+  .page-head { margin-bottom: 32px; }
+  .page-head h1 {
+    margin: 0 0 8px;
+    font-size: 32px;
+    letter-spacing: -0.01em;
+  }
+  .page-head p {
+    margin: 0;
+    color: var(--fg-faint);
+    font-size: 14px;
+    font-family: var(--font-ui);
+  }
+
+  .year-block { margin-bottom: 8px; }
+  .year {
+    margin: 36px 0 4px;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    color: var(--fg-faint);
+  }
+
+  .empty {
+    color: var(--fg-soft);
+    font-size: 15px;
+    padding: 24px;
+    background: var(--bg-soft);
+    border-radius: var(--radius);
+  }
+
+  .tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px;
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+  }
+  .tag-label { margin-right: 6px; }
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-ui);
+    font-size: 12px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: var(--bg-soft);
+    color: var(--fg-soft);
+    border: 1px solid var(--line);
+  }
+  .tag em {
+    font-style: normal;
+    font-size: 10px;
+    color: var(--fg-faint);
+  }
+
+  @media (max-width: 620px) {
+    .page { padding: 36px 0 0; }
+    .page-head h1 { font-size: 26px; }
+    .year { margin-top: 26px; }
+  }
+</style>

@@ -1,0 +1,168 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { formatDate, readingTime } from '@/utils/reading';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+
+const all = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+const idx = all.findIndex((p) => p.id === post.id);
+const next = all[idx + 1];
+const prev = all[idx - 1];
+---
+
+<BaseLayout title={post.data.title} description={post.data.description} type="article">
+  <article class="wrap post">
+    <header class="post-head">
+      <h1 class="post-title">{post.data.title}</h1>
+      <div class="post-meta mono">
+        <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+        <span class="dot">·</span>
+        <span>{readingTime(post.body)} 分钟</span>
+        {post.data.updatedDate && (
+          <>
+            <span class="dot">·</span>
+            <span>更新于 {formatDate(post.data.updatedDate)}</span>
+          </>
+        )}
+        {post.data.tags.length > 0 && (
+          <>
+            <span class="dot">·</span>
+            <span class="tags">
+              {post.data.tags.map((t: string) => <span class="tag">{t}</span>)}
+            </span>
+          </>
+        )}
+      </div>
+    </header>
+
+    <div class="prose">
+      <Content />
+    </div>
+
+    <nav class="pager">
+      {prev
+        ? <a class="pager-item" href={'/blog/' + prev.id + '/'}><span class="mono">← 上一篇</span><strong>{prev.data.title}</strong></a>
+        : <span />}
+      {next
+        ? <a class="pager-item next" href={'/blog/' + next.id + '/'}><span class="mono">下一篇 →</span><strong>{next.data.title}</strong></a>
+        : <span />}
+    </nav>
+
+    <p class="back"><a href="/blog">← 返回列表</a></p>
+  </article>
+</BaseLayout>
+
+<style>
+  .post { padding-top: 56px; }
+
+  .post-head {
+    margin-bottom: 36px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .post-title {
+    margin: 0 0 14px;
+    font-size: 32px;
+    line-height: 1.35;
+    letter-spacing: -0.012em;
+  }
+
+  .post-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px;
+  }
+  .dot { opacity: .5; }
+  .tags { display: inline-flex; gap: 5px; }
+  .tag {
+    font-size: 11px;
+    padding: 1px 7px;
+    border-radius: 4px;
+    background: var(--bg-soft);
+    color: var(--fg-soft);
+  }
+
+  .prose { font-size: inherit; }
+
+  .prose :global(h2) {
+    margin: 2.2em 0 0.7em;
+    font-size: 22px;
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+    padding-bottom: .3em;
+    border-bottom: 1px solid var(--line);
+  }
+  .prose :global(h3) {
+    margin: 1.8em 0 0.5em;
+    font-size: 18px;
+    line-height: 1.5;
+  }
+  .prose :global(p) { margin: 0 0 1.15em; }
+  .prose :global(ul), .prose :global(ol) {
+    margin: 0 0 1.2em;
+    padding-left: 1.4em;
+  }
+  .prose :global(li) { margin: 0.3em 0; }
+  .prose :global(li::marker) { color: var(--fg-faint); }
+  .prose :global(a) { text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 35%, transparent); }
+  .prose :global(a:hover) { text-decoration-color: var(--accent); }
+
+  .pager {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+  }
+  .pager-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    color: var(--fg);
+    background: var(--bg-card);
+    transition: all .16s ease;
+  }
+  .pager-item:hover {
+    border-color: var(--accent);
+    text-decoration: none;
+    transform: translateY(-2px);
+  }
+  .pager-item.next { text-align: right; }
+  .pager-item strong {
+    font-size: 14.5px;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  .back {
+    margin-top: 28px;
+    font-family: var(--font-ui);
+    font-size: 13.5px;
+  }
+
+  @media (max-width: 620px) {
+    .post { padding-top: 36px; }
+    .post-title { font-size: 25px; }
+    .prose :global(h2) { font-size: 20px; }
+    .pager { grid-template-columns: 1fr; }
+    .pager-item.next { text-align: left; }
+  }
+</style>

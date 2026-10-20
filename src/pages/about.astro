@@ -1,0 +1,58 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import SocialIcons from '@/components/SocialIcons.astro';
+import { site } from '@/data/site';
+---
+
+<BaseLayout title="关于" description="关于我。">
+  <div class="wrap page">
+    <header class="page-head reveal">
+      <h1>关于</h1>
+      <p>一个把东西写下来的人。</p>
+    </header>
+
+    <div class="prose reveal">
+      <p>
+        我是{site.name}。{site.tagline}
+      </p>
+      <p>
+        这个站点是我的数字花园：技术笔记、半成品项目、和一些还没想清楚的想法。
+        没有评论区，因为我想让这里安静一点；想聊的话，邮件或者 GitHub 都能找到我。
+      </p>
+
+      <h2>现在</h2>
+      <ul>
+        <li>在写：一些关于前端和工具链的笔记</li>
+        <li>在做：几个自用的小工具，做完会放到<a href="/projects">作品</a>页</li>
+        <li>在读：随手记在笔记里，值得的会整理成文章</li>
+      </ul>
+
+      <h2>联系我</h2>
+    </div>
+
+    <div class="reveal contact">
+      <SocialIcons />
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .page { padding: 56px 0 0; }
+  .page-head { margin-bottom: 32px; }
+  .page-head h1 { margin: 0 0 8px; font-size: 32px; letter-spacing: -0.01em; }
+  .page-head p { margin: 0; color: var(--fg-soft); font-size: 16px; }
+
+  .prose :global(h2) {
+    margin: 2em 0 .6em;
+    font-size: 20px;
+  }
+  .prose :global(p) { margin: 0 0 1.1em; }
+  .prose :global(ul) { padding-left: 1.4em; margin: 0 0 1.2em; }
+  .prose :global(li) { margin: .35em 0; }
+  .contact { margin-top: 24px; }
+
+  @media (max-width: 620px) {
+    .page { padding: 36px 0 0; }
+    .page-head h1 { font-size: 26px; }
+  }
+</style>

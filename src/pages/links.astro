@@ -1,0 +1,62 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+
+const friends = [
+  { name: '示例友链 A', desc: '一句话介绍', href: 'https://example.com/' },
+  { name: '示例友链 B', desc: '一句话介绍', href: 'https://example.com/' },
+];
+---
+
+<BaseLayout title="友链" description="朋友们。">
+  <div class="wrap page">
+    <header class="page-head reveal">
+      <h1>友链</h1>
+      <p>在 <code>src/pages/links.astro</code> 里改这个列表。</p>
+    </header>
+
+    <div class="links reveal">
+      {friends.map((f) => (
+        <a class="link-card" href={f.href} target="_blank" rel="noopener noreferrer">
+          <strong>{f.name}</strong>
+          <span>{f.desc}</span>
+        </a>
+      ))}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .page { padding: 56px 0 0; }
+  .page-head { margin-bottom: 28px; }
+  .page-head h1 { margin: 0 0 8px; font-size: 32px; }
+  .page-head p { margin: 0; color: var(--fg-faint); font-size: 13.5px; font-family: var(--font-ui); }
+
+  .links {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+  }
+  .link-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 16px 18px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--bg-card);
+    color: var(--fg);
+    transition: all .16s ease;
+  }
+  .link-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    text-decoration: none;
+  }
+  .link-card strong { font-size: 15px; }
+  .link-card span { font-size: 13px; color: var(--fg-soft); font-family: var(--font-ui); }
+
+  @media (max-width: 620px) {
+    .page { padding: 36px 0 0; }
+    .page-head h1 { font-size: 26px; }
+  }
+</style>

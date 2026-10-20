@@ -1,0 +1,86 @@
+---
+import { formatDate, readingTime } from '@/utils/reading';
+
+interface Props {
+  posts: any[];
+  /** 是否显示描述 */
+  showDesc?: boolean;
+}
+const { posts, showDesc = true } = Astro.props;
+---
+
+<ul class="post-list">
+  {posts.map((post) => (
+    <li>
+      <a class="post-item" href={'/blog/' + post.id + '/'}>
+        <time class="post-date mono" datetime={post.data.pubDate.toISOString()}>
+          {formatDate(post.data.pubDate)}
+        </time>
+        <div class="post-main">
+          <h3 class="post-title">{post.data.title}</h3>
+          {showDesc && <p class="post-desc">{post.data.description}</p>}
+          <div class="post-meta mono">
+            {post.data.tags.map((t: string) => <span class="mini-tag">{t}</span>)}
+            <span>{readingTime(post.body)} 分钟</span>
+          </div>
+        </div>
+      </a>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .post-list { list-style: none; margin: 0; padding: 0; }
+
+  .post-item {
+    display: grid;
+    grid-template-columns: 92px 1fr;
+    gap: 20px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--line);
+    color: var(--fg);
+  }
+  .post-item:hover { text-decoration: none; }
+  .post-item:hover .post-title { color: var(--accent); }
+
+  .post-date {
+    padding-top: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .post-title {
+    margin: 0 0 5px;
+    font-size: 17.5px;
+    font-weight: 700;
+    line-height: 1.45;
+    transition: color .15s ease;
+  }
+
+  .post-desc {
+    margin: 0 0 8px;
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--fg-soft);
+    font-family: var(--font-ui);
+  }
+
+  .post-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mini-tag {
+    font-size: 11px;
+    padding: 1px 7px;
+    border-radius: 4px;
+    background: var(--bg-soft);
+    color: var(--fg-soft);
+  }
+
+  @media (max-width: 560px) {
+    .post-item { grid-template-columns: 1fr; gap: 6px; }
+    .post-date { padding-top: 0; }
+  }
+</style>

@@ -1,0 +1,46 @@
+---
+import { site } from '@/data/site';
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-line">
+      <span>© {year} {site.name}</span>
+      <span class="sep">·</span>
+      <span>{site.footerNote}</span>
+    </div>
+    {site.icp && (
+      <div class="footer-sub">
+        <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">{site.icp}</a>
+        {site.police && (
+          <a href="http://www.beian.gov.cn/portal/registerSystemInfo" target="_blank" rel="noopener noreferrer">{site.police}</a>
+        )}
+      </div>
+    )}
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: 96px;
+    padding: 32px 0 48px;
+    border-top: 1px solid var(--line);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    color: var(--fg-faint);
+  }
+  .footer-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  .sep { opacity: .5; }
+  .footer-sub {
+    margin-top: 8px;
+    display: flex;
+    gap: 14px;
+  }
+  .footer-sub a { color: var(--fg-faint); }
+</style>

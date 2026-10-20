@@ -1,0 +1,58 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="404" description="页面不存在。">
+  <div class="wrap notfound">
+    <p class="code">404</p>
+    <h1>这一页不在了</h1>
+    <p class="desc">可能是我把它删了，也可能是链接打错了。</p>
+    <div class="actions">
+      <a class="btn primary" href="/">回首页</a>
+      <a class="btn" href="/blog">看看文章</a>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .notfound {
+    min-height: 56vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-top: 40px;
+    padding-bottom: 40px;
+  }
+  .code {
+    margin: 0;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    letter-spacing: .3em;
+    color: var(--accent);
+  }
+  h1 {
+    margin: 12px 0 10px;
+    font-size: 34px;
+    letter-spacing: -0.01em;
+  }
+  .desc { margin: 0 0 28px; color: var(--fg-soft); }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn {
+    display: inline-block;
+    padding: 9px 18px;
+    border-radius: 9px;
+    border: 1px solid var(--line);
+    background: var(--bg-card);
+    color: var(--fg);
+    font-family: var(--font-ui);
+    font-size: 14px;
+    transition: all .15s ease;
+  }
+  .btn:hover { border-color: var(--accent); text-decoration: none; transform: translateY(-1px); }
+  .btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .btn.primary:hover { filter: brightness(1.08); }
+</style>

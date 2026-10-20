@@ -1,0 +1,155 @@
+---
+/**
+ * 滚动吸顶叙事
+ * 外层给足 300vh 的滚动距离，内层 sticky 钉在视口，靠滚动进度切换内容。
+ * 纯 CSS sticky + 一个 scroll 监听，无动画库。
+ */
+const slides = [
+  {
+    n: '01',
+    title: '先写，再想',
+    body: '想不清楚的时候就开始写。写下来的过程，本身就是把混乱整理成句子的过程。',
+  },
+  {
+    n: '02',
+    title: '一次只讲一件事',
+    body: '每篇文章只回答一个问题。信息密度低一点，被记住的概率反而高一点。',
+  },
+  {
+    n: '03',
+    title: '做完比做好更重要',
+    body: '作品页里有一半是半成品。它们不完美，但都真实地跑起来过。',
+  },
+];
+---
+
+<section class="stage" id="story" data-story>
+  <div class="sticky">
+    <div class="wrap slides">
+      {slides.map((s, k) => (
+        <div class:list={['slide', { on: k === 0 }]} data-slide={k}>
+          <p class="num">{s.n}</p>
+          <h2 class="headline">{s.title}</h2>
+          <p class="body">{s.body}</p>
+        </div>
+      ))}
+
+      <div class="dots" aria-hidden="true">
+        {slides.map((_, k) => <i class:list={{ on: k === 0 }} />)}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .stage {
+    height: 300vh;
+    position: relative;
+  }
+
+  .sticky {
+    position: sticky;
+    top: 60px;
+    height: calc(100vh - 60px);
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  .slides {
+    display: grid;
+    width: 100%;
+  }
+
+  .slide {
+    grid-area: 1 / 1;
+    align-self: center;
+    text-align: center;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(18px) scale(.985);
+    transition: opacity .6s var(--ease), transform .8s var(--ease), visibility .6s;
+    pointer-events: none;
+  }
+  .slide.on {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    pointer-events: auto;
+  }
+
+  .num {
+    margin: 0 0 20px;
+    font-family: var(--font-ui);
+    font-size: clamp(64px, 13vw, 140px);
+    font-weight: 800;
+    line-height: .95;
+    letter-spacing: -0.055em;
+    background: linear-gradient(180deg, var(--fg), color-mix(in srgb, var(--fg) 18%, transparent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .headline { margin-bottom: 16px; }
+
+  .body {
+    margin: 0 auto;
+    max-width: 24em;
+    font-size: clamp(15px, 1.7vw, 17px);
+    line-height: 1.75;
+    color: var(--fg-soft);
+  }
+
+  .dots {
+    position: absolute;
+    left: 50%;
+    bottom: 6%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 9px;
+  }
+  .dots i {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--fg) 18%, transparent);
+    transition: all .4s var(--ease);
+  }
+  .dots i.on {
+    width: 26px;
+    border-radius: 4px;
+    background: var(--accent);
+  }
+
+  @media (max-width: 620px) {
+    .stage { height: 240vh; }
+    .body { font-size: 15px; }
+  }
+</style>
+
+<script>
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const stage = document.querySelector('[data-story]') as HTMLElement | null;
+
+  if (stage) {
+    const slides = [...stage.querySelectorAll<HTMLElement>('[data-slide]')];
+    const dots = [...stage.querySelectorAll<HTMLElement>('.dots i')];
+    let current = -1;
+
+    const update = () => {
+      const r = stage.getBoundingClientRect();
+      const total = stage.offsetHeight - innerHeight;
+      const prog = total > 0 ? Math.min(0.999, Math.max(0, -r.top / total)) : 0;
+      const idx = reduced ? 0 : Math.min(slides.length - 1, Math.floor(prog * slides.length));
+      if (idx === current) return;
+      current = idx;
+      slides.forEach((s, k) => s.classList.toggle('on', k === idx));
+      dots.forEach((d, k) => d.classList.toggle('on', k === idx));
+    };
+
+    update();
+    addEventListener('scroll', update, { passive: true });
+    addEventListener('resize', update);
+  }
+</script>

@@ -1,0 +1,130 @@
+---
+interface Stat {
+  k: string;
+  v: string;
+  d: string;
+}
+
+interface Props {
+  stats: Stat[];
+  eyebrow?: string;
+  title?: string;
+  lead?: string;
+}
+
+const {
+  stats,
+  eyebrow = '一直如此',
+  title = '写下来的，\n才算真正想清楚。',
+  lead = '大部分东西躺在草稿里。这一页只放已经发出去的——不为凑数，只为让它们有个地方待着。',
+} = Astro.props;
+
+const [line1, line2] = title.split('\n');
+---
+
+<section class="band">
+  <div class="wrap">
+    <p class="eyebrow rv" style="color: #d99a6c">{eyebrow}</p>
+
+    <h2 class="headline rv" style="--i:1">
+      {line1}
+      {line2 && <><br />{line2}</>}
+    </h2>
+
+    <p class="lead rv" style="--i:2">{lead}</p>
+
+    <div class="cols rv" style="--i:3">
+      {stats.map((s) => (
+        <div class="col">
+          <p class="k">{s.k}</p>
+          <p class="v">{s.v}</p>
+          <p class="d">{s.d}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .band {
+    background: var(--bg-band);
+    color: #f3ece2;
+    padding: 108px 0;
+    margin: 40px 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* 顶部一条极淡的暖光，避免死黑 */
+  .band::before {
+    content: "";
+    position: absolute;
+    top: -40%;
+    left: 30%;
+    width: 40vw;
+    height: 40vw;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(217, 138, 74, .16), transparent 68%);
+    pointer-events: none;
+  }
+
+  .headline {
+    color: #f3ece2;
+    max-width: 18ch;
+  }
+
+  .lead {
+    margin: 26px 0 0;
+    max-width: 34em;
+    color: #a49a8c;
+  }
+
+  .cols {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1px;
+    margin-top: 56px;
+    background: rgba(255, 255, 255, .08);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .col {
+    background: var(--bg-band);
+    padding: 28px 24px 32px;
+  }
+
+  .k {
+    margin: 0 0 12px;
+    font-family: var(--font-ui);
+    font-size: 12.5px;
+    letter-spacing: .06em;
+    color: #8d8478;
+  }
+
+  .v {
+    margin: 0 0 8px;
+    font-family: var(--font-ui);
+    font-size: clamp(30px, 4vw, 44px);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.035em;
+    background: linear-gradient(180deg, #fff, rgba(255, 255, 255, .45));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .d {
+    margin: 0;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    line-height: 1.5;
+    color: #8d8478;
+  }
+
+  @media (max-width: 620px) {
+    .band { padding: 72px 0; }
+    .cols { margin-top: 40px; }
+  }
+</style>

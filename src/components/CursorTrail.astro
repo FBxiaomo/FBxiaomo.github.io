@@ -1,0 +1,149 @@
+---
+/**
+ * 指针光斑网格
+ * 参考 openless.top 的 mask 思路，改成 canvas + 离屏遮罩实现：
+ * 先画一张稀疏方格网，再用径向渐变把光斑以外的部分挖掉。
+ * 只在 pointer:fine 且非 reduced-motion 时启用，指针静止 780ms 后自动停 rAF。
+ */
+---
+
+<canvas id="cursor-trail" aria-hidden="true"></canvas>
+
+<style>
+  #cursor-trail {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: .55;
+  }
+
+  /* 内容层始终盖在轨迹之上 */
+  :global(body > header),
+  :global(body > main),
+  :global(body > footer) {
+    position: relative;
+    z-index: 2;
+  }
+
+  @media (prefers-reduced-motion: reduce), (pointer: coarse) {
+    #cursor-trail { display: none; }
+  }
+</style>
+
+<script>
+  const fine = matchMedia('(pointer: fine)').matches;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (fine && !reduced) {
+    const cv = document.getElementById('cursor-trail') as HTMLCanvasElement;
+    const ctx = cv.getContext('2d')!;
+    const mask = document.createElement('canvas');
+    const mctx = mask.getContext('2d')!;
+
+    let dpr = 1, W = 0, H = 0;
+    let variants: HTMLCanvasElement[] = [];
+    let vIdx = 0, vClock = 0;
+    let raf: number | null = null;
+
+    const accent = () =>
+      getComputedStyle(document.documentElement).getPropertyValue('--glow').trim() || '#b8543a';
+
+    function buildGrid(w: number, h: number, d: number) {
+      const c = document.createElement('canvas');
+      c.width = Math.floor(w * d);
+      c.height = Math.floor(h * d);
+      const g = c.getContext('2d')!;
+      g.scale(d, d);
+      const size = 3, step = 12, col = accent();
+      for (let y = 0; y < h; y += step) {
+        for (let x = 0; x < w; x += step) {
+          if (Math.random() < 0.28) continue;
+          g.globalAlpha = 0.3 + Math.random() * 0.7;
+          g.fillStyle = col;
+          g.fillRect(x, y, size, size);
+        }
+      }
+      return c;
+    }
+
+    function resize() {
+      dpr = Math.min(devicePixelRatio || 1, 2);
+      W = innerWidth;
+      H = innerHeight;
+      for (const c of [cv, mask]) {
+        c.width = Math.floor(W * dpr);
+        c.height = Math.floor(H * dpr);
+        c.getContext('2d')!.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      cv.style.width = W + 'px';
+      cv.style.height = H + 'px';
+      variants = [buildGrid(W, H, dpr), buildGrid(W, H, dpr)];
+    }
+
+    resize();
+    addEventListener('resize', () => {
+      resize();
+      if (pts.length) render();
+    });
+
+    const pts: { x: number; y: number; t: number }[] = [];
+    const LIFE = 700;
+
+    function onMove(e: PointerEvent) {
+      const r = pts[0];
+      if (r && Math.hypot(e.clientX - r.x, e.clientY - r.y) < 7) return;
+      pts.unshift({ x: e.clientX, y: e.clientY, t: performance.now() });
+      if (pts.length > 12) pts.pop();
+      if (!raf) raf = requestAnimationFrame(tick);
+    }
+    addEventListener('pointermove', onMove, { passive: true });
+
+    function paintMask(list: typeof pts, now: number) {
+      mctx.clearRect(0, 0, W, H);
+      mctx.globalCompositeOperation = 'lighter';
+      for (const p of list) {
+        const a = Math.max(0, 1 - (now - p.t) / LIFE);
+        if (a <= 0) continue;
+        const rad = 80 + 70 * a;
+        const g = mctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, rad);
+        g.addColorStop(0, 'rgba(255,255,255,' + (0.8 * a).toFixed(3) + ')');
+        g.addColorStop(0.5, 'rgba(255,255,255,' + (0.3 * a).toFixed(3) + ')');
+        g.addColorStop(1, 'rgba(255,255,255,0)');
+        mctx.fillStyle = g;
+        mctx.beginPath();
+        mctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
+        mctx.fill();
+      }
+      mctx.globalCompositeOperation = 'source-over';
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, W, H);
+      const now = performance.now();
+      while (pts.length && now - pts[pts.length - 1].t > LIFE) pts.pop();
+      if (!pts.length) return;
+
+      vClock += 16;
+      if (vClock > 240) {
+        vClock = 0;
+        vIdx = (vIdx + 1) % variants.length;
+      }
+
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.drawImage(variants[vIdx], 0, 0, W, H);
+
+      paintMask(pts, now);
+      ctx.globalCompositeOperation = 'destination-in';
+      ctx.drawImage(mask, 0, 0, W, H);
+      ctx.globalCompositeOperation = 'source-over';
+    }
+
+    function tick() {
+      render();
+      raf = pts.length ? requestAnimationFrame(tick) : null;
+    }
+  }
+</script>

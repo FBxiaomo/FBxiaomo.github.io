@@ -1,0 +1,89 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Hero from '@/components/Hero.astro';
+import Story from '@/components/Story.astro';
+import StatsBand from '@/components/StatsBand.astro';
+import ProjectRail from '@/components/ProjectRail.astro';
+import PostList from '@/components/PostList.astro';
+import { projects } from '@/data/projects';
+
+const all = await getCollection('blog', ({ data }) => !data.draft);
+const sorted = all.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+const recent = sorted.slice(0, 4);
+
+const years = all.length
+  ? new Date().getFullYear() - Math.min(...all.map((p) => p.data.pubDate.getFullYear())) + 1
+  : 1;
+
+const stats = [
+  { k: '文章', v: String(all.length), d: '写下来并且发出来的' },
+  { k: '作品', v: String(projects.length), d: '其中 ' + projects.filter((p) => p.status === 'active').length + ' 个还在维护' },
+  { k: '写了', v: String(years) + ' 年', d: '从第一篇开始算' },
+];
+---
+
+<BaseLayout>
+  <Hero />
+  <Story />
+  <StatsBand stats={stats} />
+
+  <ProjectRail projects={projects} />
+
+  <section class="wrap latest">
+    <div class="rule rv" style="--i:0">
+      <h2 class="headline">最近写的</h2>
+      <a class="more" href="/blog">全部 →</a>
+    </div>
+    <div class="rv" style="--i:1">
+      <PostList posts={recent} />
+    </div>
+  </section>
+
+  <section class="wrap outro rv">
+    <p class="outro-text">如果这些文字对你有用，那就算没白写。</p>
+    <a class="more" href="/about">关于我 →</a>
+  </section>
+</BaseLayout>
+
+<style>
+  .latest {
+    margin-top: 96px;
+  }
+  .latest .rule {
+    align-items: baseline;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+  }
+  .latest .rule::after {
+    margin-bottom: 6px;
+  }
+  .more {
+    font-family: var(--font-ui);
+    font-size: 13px;
+    color: var(--fg-faint);
+    white-space: nowrap;
+  }
+  .more:hover { color: var(--accent); text-decoration: none; }
+
+  .outro {
+    margin: 88px auto 0;
+    padding-top: 40px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .outro-text {
+    margin: 0;
+    font-size: 15px;
+    color: var(--fg-soft);
+  }
+
+  @media (max-width: 620px) {
+    .latest { margin-top: 64px; }
+    .outro { margin-top: 56px; }
+  }
+</style>
