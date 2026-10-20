@@ -16,8 +16,12 @@
 
   --radius: 14px;
   --radius-lg: 22px;
-  --maxw: 860px;
-  --maxw-wide: 1080px;
+  /* 内容宽度：基础固定值，再随视口流体扩展，各设上限。
+     —— 常规 860px 起，至多 980px（视口 >1180px 后每 100px 宽多给 10px）；
+     —— 宽版 1080px 起，至多 1280px（视口 >1400px 后开始扩展）。
+     Ctrl 缩小 = 视口 CSS 像素变大，内容条随之轻微展宽，但不会无限拉宽。 */
+  --maxw: clamp(860px, 860px + 12 * (100vw - 1180px) / 100, 980px);
+  --maxw-wide: clamp(1080px, 1080px + 20 * (100vw - 1400px) / 100, 1280px);
 
   --shadow: 0 1px 2px rgba(60, 40, 20, 0.05), 0 6px 20px rgba(60, 40, 20, 0.04);
   --shadow-lift: 0 4px 10px rgba(60, 40, 20, 0.07), 0 18px 40px rgba(60, 40, 20, 0.09);
