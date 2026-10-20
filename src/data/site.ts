@@ -4,7 +4,7 @@
 
 export const site = {
   /** 站点名，显示在页头左上角 */
-  name: '你的名字',
+  name: '风暴小末',
 
   /** 一句话简介 */
   tagline: '写代码，也写点别的。',
@@ -29,10 +29,9 @@ export const site = {
 
   /** 社交链接：想加就加，想删就删 */
   socials: [
-    { label: 'GitHub', href: 'https://github.com/', icon: 'github' },
+    { label: 'GitHub', href: 'https://github.com/FBxiaomo', icon: 'github' },
     { label: 'Bilibili', href: 'https://space.bilibili.com/', icon: 'bilibili' },
-    { label: '邮箱', href: 'mailto:you@example.com', icon: 'mail' },
-    { label: 'RSS', href: '/rss.xml', icon: 'rss' },
+    { label: '订阅', href: '/rss.xml', icon: 'rss' },
   ],
 
   /** 页脚 */
