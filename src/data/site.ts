@@ -33,6 +33,7 @@ export const site = {
   /** 社交链接：想加就加，想删就删 */
   socials: [
     { label: 'GitHub', href: 'https://github.com/FBxiaomo', icon: 'github' },
+    // 补上个人空间 UID 后，即可直接跳转到自己的主页。
     { label: 'Bilibili', href: 'https://space.bilibili.com/', icon: 'bilibili' },
     { label: '订阅', href: '/rss.xml', icon: 'rss' },
   ],

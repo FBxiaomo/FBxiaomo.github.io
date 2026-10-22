@@ -1,19 +1,16 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
-
-const friends = [
-  { name: '示例友链 A', desc: '一句话介绍', href: 'https://example.com/' },
-  { name: '示例友链 B', desc: '一句话介绍', href: 'https://example.com/' },
-];
+import { friends } from '@/data/friends';
 ---
 
 <BaseLayout title="友链" description="朋友们。">
   <div class="wrap page">
     <header class="page-head reveal">
       <h1>友链</h1>
-      <p>在 <code>src/pages/links.astro</code> 里改这个列表。</p>
+      <p>朋友们的数字角落。</p>
     </header>
 
+    {friends.length === 0 && <p>友链整理中，之后再来看看吧。</p>}
     <div class="links reveal">
       {friends.map((f) => (
         <a class="link-card" href={f.href} target="_blank" rel="noopener noreferrer">
@@ -55,7 +52,7 @@ const friends = [
   .link-card strong { font-size: 15px; }
   .link-card span { font-size: 13px; color: var(--fg-soft); font-family: var(--font-ui); }
 
-  @media (max-width: 620px) {
+  @media (max-width: 640px) {
     .page { padding-top: 36px; }
     .page-head h1 { font-size: 26px; }
   }

@@ -1,0 +1,7 @@
+{
+  "oauthBaseUrl": "https://study-note-oauth.1092277506.workers.dev",
+  "siteUrl": "https://fbxiaomo.github.io",
+  "websiteRepository": "FBxiaomo/FBxiaomo.github.io",
+  "websiteBranch": "main",
+  "websiteWorkflow": "deploy.yml"
+}

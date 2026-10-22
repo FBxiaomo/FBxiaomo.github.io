@@ -3,10 +3,18 @@
   "type": "module",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "pnpm@11.10.0",
+  "engines": {
+    "node": ">=24 <25"
+  },
   "scripts": {
-    "dev": "astro dev",
-    "start": "astro dev",
-    "build": "astro build",
+    "dev": "node scripts/sync-blog.mjs --prefer-cache && astro dev",
+    "start": "node scripts/sync-blog.mjs --prefer-cache && astro dev",
+    "sync:blog": "node scripts/sync-blog.mjs",
+    "test:blog": "node --test tests/blog-source.test.mjs",
+    "test:cms": "node --test tests/cms.test.mjs",
+    "check": "astro check",
+    "build": "node scripts/sync-blog.mjs && astro check && astro build",
     "preview": "astro preview",
     "astro": "astro"
   },
@@ -14,5 +22,14 @@
     "@astrojs/rss": "^4.0.0",
     "@astrojs/sitemap": "^3.0.0",
     "astro": "^5.0.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.11",
+    "github-slugger": "2.0.0",
+    "gray-matter": "4.0.3",
+    "remark-gfm": "4.0.1",
+    "remark-parse": "11.0.0",
+    "typescript": "5.9.3",
+    "unified": "11.0.5"
   }
 }

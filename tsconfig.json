@@ -10,9 +10,13 @@
   },
   "include": [
     ".astro/types.d.ts",
-    "**/*"
+    "src/**/*",
+    "astro.config.mjs"
   ],
   "exclude": [
-    "dist"
+    "dist",
+    "preview",
+    "acl-recovery",
+    "node_modules"
   ]
 }

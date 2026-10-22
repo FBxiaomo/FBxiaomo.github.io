@@ -1,0 +1,10 @@
+{
+  "name": "study-note-oauth",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-10-22",
+  "vars": {
+    "CMS_ORIGIN": "https://fbxiaomo.github.io",
+    "ALLOWED_GITHUB_LOGIN": "FBxiaomo",
+    "ALLOWED_GITHUB_ID": ""
+  }
+}

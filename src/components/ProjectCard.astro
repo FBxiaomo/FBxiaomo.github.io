@@ -1,10 +1,9 @@
 ---
-import type { Project } from '@/data/projects';
+import { statusLabel, type Project } from '@/data/projects';
 
 interface Props { project: Project; }
 const { project } = Astro.props;
 const isExternal = project.external ?? /^https?:\/\//.test(project.href);
-const statusLabel = { active: '维护中', wip: '开发中', archived: '已归档' } as const;
 ---
 
 <a

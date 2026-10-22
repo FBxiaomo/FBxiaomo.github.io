@@ -1,12 +1,9 @@
 ---
-import { getCollection } from 'astro:content';
+import { getPublishedPosts } from '@/utils/posts';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import PostList from '@/components/PostList.astro';
-import { formatDate } from '@/utils/reading';
 
-const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
-  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
-);
+const posts = await getPublishedPosts();
 
 // 按年份分组
 const byYear = new Map<number, typeof posts>();
@@ -23,14 +20,14 @@ const tags = [...tagCount.entries()].sort((a, b) => b[1] - a[1]);
 ---
 
 <BaseLayout title="博客" description="技术笔记、项目记录和一些想法。">
-  <div class="wrap page">
+  <div class="wrap reading-panel">
     <header class="page-head reveal">
       <h1>博客</h1>
       <p>共 {posts.length} 篇 · 按时间倒序</p>
     </header>
 
     {posts.length === 0 && (
-      <p class="empty">还没有文章。在 <code>src/content/blog/</code> 里新建一个 .md 文件就能开始写。</p>
+      <p class="empty">还没有文章，过段时间再来看看吧。</p>
     )}
 
     {years.map(([year, list]) => (
@@ -50,7 +47,6 @@ const tags = [...tagCount.entries()].sort((a, b) => b[1] - a[1]);
 </BaseLayout>
 
 <style>
-  .page { padding-top: 56px; }
   .page-head { margin-bottom: 32px; }
   .page-head h1 {
     margin: 0 0 8px;
@@ -110,8 +106,7 @@ const tags = [...tagCount.entries()].sort((a, b) => b[1] - a[1]);
     color: var(--fg-faint);
   }
 
-  @media (max-width: 620px) {
-    .page { padding-top: 36px; }
+  @media (max-width: 640px) {
     .page-head h1 { font-size: 26px; }
     .year { margin-top: 26px; }
   }

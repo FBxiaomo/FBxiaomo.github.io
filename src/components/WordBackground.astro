@@ -90,7 +90,7 @@
     const bg = document.getElementById('wordBg') as HTMLElement | null;
     if (!bg) return;
 
-    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const motion = matchMedia('(prefers-reduced-motion: reduce)');
     const coarse = matchMedia('(pointer: coarse)').matches;
 
     // 指针位置；pointer:fine 之外禁用悬停高亮
@@ -121,6 +121,18 @@
     let W = 0, H = 0;
     let raf: number | null = null;
     let last = 0;
+    let fadedOut = false;
+
+    function syncAnimation() {
+      const paused = motion.matches || document.hidden || fadedOut;
+      if (paused) {
+        if (raf !== null) cancelAnimationFrame(raf);
+        raf = null;
+      } else if (raf === null) {
+        last = performance.now();
+        raf = requestAnimationFrame(tick);
+      }
+    }
 
     const pickWord = () => {
       const g = pool[(Math.random() * pool.length) | 0];
@@ -199,26 +211,24 @@
     }
 
     build();
-    if (reduced) {
-      for (const w of words) w.el.style.transform = 'translate3d(' + w.x + 'px,0,0)';
-    } else {
-      last = performance.now();
-      raf = requestAnimationFrame(tick);
-    }
+    motion.addEventListener('change', syncAnimation);
+    document.addEventListener('visibilitychange', syncAnimation);
 
     // resize 只更新尺寸：越界的词会在 tick 里自然回收换新，不整层闪换
-    addEventListener('resize', () => { W = innerWidth; H = innerHeight; });
+    addEventListener('resize', () => { W = innerWidth; H = innerHeight; updateFade(); });
 
     // ---- 滚动淡出：缓出曲线 (1-p)^2.2，越往下变淡越慢 ----
     function updateFade() {
       const scrollH = document.documentElement.scrollHeight - innerHeight;
-      if (scrollH <= 0) { bg!.style.opacity = '1'; return; }
-      const p = Math.min(1, Math.max(0, scrollY / scrollH));
+      const p = scrollH > 0 ? Math.min(1, Math.max(0, scrollY / scrollH)) : 0;
       const fade = Math.pow(1 - p, 2.2);
-      bg!.style.opacity = fade < 0.002 ? '0' : fade.toFixed(3);
+      fadedOut = fade < 0.002;
+      bg!.style.opacity = fadedOut ? '0' : fade.toFixed(3);
+      syncAnimation();
     }
     addEventListener('scroll', updateFade, { passive: true });
     updateFade();
+    addEventListener('load', updateFade, { once: true });
 
     // 主题切换：就地改透明度，不重建（避免整层词瞬间换掉）
     new MutationObserver(() => {

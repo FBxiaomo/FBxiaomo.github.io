@@ -43,7 +43,6 @@ const year = new Date().getFullYear();
   .footer-glow.on {
     opacity: 1;
   }
-  .footer-glow.on { opacity: 1; }
 
   @media (prefers-reduced-motion: reduce) {
     .footer-glow { opacity: .3; background: radial-gradient(300px 140px at 50% 50%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%); }
@@ -69,11 +68,12 @@ const year = new Date().getFullYear();
     gap: 14px;
   }
   .footer-sub a { color: var(--fg-faint); }
+</style>
 
 <script>
-  const footer = document.querySelector('[data-footer-glow]');
-  const glow = footer?.querySelector('.footer-glow');
-  if (footer && glow) {
+  const footer = document.querySelector<HTMLElement>('[data-footer-glow]');
+  const glow = footer?.querySelector<HTMLElement>('.footer-glow');
+  if (footer && glow && !matchMedia('(prefers-reduced-motion: reduce)').matches && matchMedia('(pointer: fine)').matches) {
     let raf = 0;
     footer.addEventListener('pointermove', (e) => {
       cancelAnimationFrame(raf);
@@ -84,6 +84,7 @@ const year = new Date().getFullYear();
       });
     });
     footer.addEventListener('pointerleave', () => {
+      cancelAnimationFrame(raf);
       glow.classList.remove('on');
     });
     footer.addEventListener('pointerenter', () => {
@@ -91,4 +92,3 @@ const year = new Date().getFullYear();
     });
   }
 </script>
-</style>

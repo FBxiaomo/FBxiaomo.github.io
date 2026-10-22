@@ -1,8 +1,9 @@
 ---
 import { formatDate, readingTime } from '@/utils/reading';
+import type { CollectionEntry } from 'astro:content';
 
 interface Props {
-  posts: any[];
+  posts: CollectionEntry<'blog'>[];
   /** 是否显示描述 */
   showDesc?: boolean;
 }
@@ -79,7 +80,7 @@ const { posts, showDesc = true } = Astro.props;
     color: var(--fg-soft);
   }
 
-  @media (max-width: 560px) {
+  @media (max-width: 640px) {
     .post-item { grid-template-columns: 1fr; gap: 6px; }
     .post-date { padding-top: 0; }
   }

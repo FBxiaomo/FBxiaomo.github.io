@@ -1,29 +1,29 @@
 ---
-import { getCollection, render } from 'astro:content';
+import { render, type CollectionEntry } from 'astro:content';
+import { getPublishedPosts } from '@/utils/posts';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { formatDate, readingTime } from '@/utils/reading';
 
 export async function getStaticPaths() {
-  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  const posts = await getPublishedPosts();
   return posts.map((post) => ({
     params: { slug: post.id },
     props: { post },
   }));
 }
 
+interface Props { post: CollectionEntry<'blog'>; }
 const { post } = Astro.props;
 const { Content } = await render(post);
 
-const all = (await getCollection('blog', ({ data }) => !data.draft)).sort(
-  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
-);
+const all = await getPublishedPosts();
 const idx = all.findIndex((p) => p.id === post.id);
 const next = all[idx + 1];
 const prev = all[idx - 1];
 ---
 
-<BaseLayout title={post.data.title} description={post.data.description} type="article">
-  <article class="wrap post">
+<BaseLayout title={post.data.title} description={post.data.description} type="article" pubDate={post.data.pubDate} updatedDate={post.data.updatedDate} image={post.data.cover}>
+  <article class="wrap reading-panel">
     <header class="post-head">
       <h1 class="post-title">{post.data.title}</h1>
       <div class="post-meta mono">
@@ -48,8 +48,13 @@ const prev = all[idx - 1];
     </header>
 
     <div class="prose">
+      {post.data.cover && <img src={post.data.cover} alt={post.data.title + ' 封面'} class="post-cover" />}
       <Content />
     </div>
+
+    {post.data.source && (
+      <p class="source-note">本文同步自 <a href={post.data.source.url} target="_blank" rel="noopener noreferrer">{post.data.source.label} · 查看原文 ↗</a></p>
+    )}
 
     <nav class="pager">
       {prev
@@ -65,29 +70,6 @@ const prev = all[idx - 1];
 </BaseLayout>
 
 <style>
-  .post {
-    padding-top: 56px;
-    /* 磨砂底板：隔开背景流动词，提升正文可读性 */
-    background: color-mix(in srgb, var(--bg) 16%, transparent);
-    backdrop-filter: saturate(150%) blur(12px);
-    -webkit-backdrop-filter: saturate(150%) blur(12px);
-    border: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow);
-    margin-top: 24px;
-    margin-bottom: 24px;
-    padding-left: 40px;
-    padding-right: 40px;
-    padding-bottom: 44px;
-  }
-
-  /* 浏览器不支持 backdrop-filter 时退化为更实的底色 */
-  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    .post {
-      background: color-mix(in srgb, var(--bg) 94%, transparent);
-    }
-  }
-
   .post-head {
     margin-bottom: 36px;
     padding-bottom: 22px;
@@ -118,6 +100,8 @@ const prev = all[idx - 1];
   }
 
   .prose { font-size: inherit; }
+  .post-cover { width: 100%; border-radius: var(--radius); margin-bottom: 24px; }
+  .source-note { margin-top: 32px; font: 13px/1.7 var(--font-ui); color: var(--fg-soft); }
 
   .prose :global(h2) {
     margin: 2.2em 0 0.7em;
@@ -179,16 +163,7 @@ const prev = all[idx - 1];
     font-size: 13.5px;
   }
 
-  @media (max-width: 620px) {
-    .post {
-      padding-top: 36px;
-      padding-left: 18px;
-      padding-right: 18px;
-      padding-bottom: 28px;
-      border-radius: var(--radius);
-      margin-top: 12px;
-      margin-bottom: 12px;
-    }
+  @media (max-width: 640px) {
     .post-title { font-size: 25px; }
     .prose :global(h2) { font-size: 20px; }
     .pager { grid-template-columns: 1fr; }

@@ -11,11 +11,13 @@ export type Project = {
   tags?: string[];
   status?: 'active' | 'wip' | 'archived';
   external?: boolean;
-  /** 首页只显示 featured 为 true 的卡片，默认全部显示 */
+  /** 首页默认显示，设为 false 则仅在作品页显示 */
   featured?: boolean;
   /** 封面图：/images/xxx.jpg。留空会自动用暖色渐变兜底 */
   cover?: string;
 };
+
+export const statusLabel = { active: '维护中', wip: '开发中', archived: '已归档' } as const;
 
 export const projects: Project[] = [
   {

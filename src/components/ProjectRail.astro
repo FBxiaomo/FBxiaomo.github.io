@@ -1,5 +1,5 @@
 ---
-import type { Project } from '@/data/projects';
+import { statusLabel, type Project } from '@/data/projects';
 
 interface Props {
   projects: Project[];
@@ -8,7 +8,6 @@ interface Props {
 
 const { projects, title = '作品' } = Astro.props;
 
-const statusLabel = { active: '维护中', wip: '开发中', archived: '已归档' } as const;
 
 /** 没有封面图时用一组克制的暖色渐变兜底 */
 const tints = [
@@ -237,7 +236,7 @@ const tints = [
   :global([data-theme='dark']) .tag[data-status='active'] { color: #7fc99b; background: #1c2f24; }
   :global([data-theme='dark']) .tag[data-status='wip'] { color: #d9ac5f; background: #322818; }
 
-  @media (max-width: 620px) {
+  @media (max-width: 640px) {
     .rail-block { margin: 64px auto; }
     .rail-head { padding: 0 18px; }
     .rail { padding: 4px 18px 20px; }

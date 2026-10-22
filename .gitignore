@@ -29,3 +29,11 @@ node_modules.bak/
 
 acl-recovery/
 
+# 从独立博客仓库同步的生成文件与缓存
+.cache/blog-sync/
+.cache/study-note-migration/
+
+# Cloudflare 本地密钥与部署状态
+.dev.vars*
+.wrangler/
+

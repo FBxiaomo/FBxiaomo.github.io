@@ -1,5 +1,5 @@
 ---
-import { getCollection } from 'astro:content';
+import { getPublishedPosts } from '@/utils/posts';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Hero from '@/components/Hero.astro';
 import Story from '@/components/Story.astro';
@@ -8,9 +8,9 @@ import ProjectRail from '@/components/ProjectRail.astro';
 import PostList from '@/components/PostList.astro';
 import { projects } from '@/data/projects';
 
-const all = await getCollection('blog', ({ data }) => !data.draft);
-const sorted = all.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
-const recent = sorted.slice(0, 4);
+const all = await getPublishedPosts();
+const recent = all.slice(0, 4);
+const featured = projects.filter((project) => project.featured !== false);
 
 const years = all.length
   ? new Date().getFullYear() - Math.min(...all.map((p) => p.data.pubDate.getFullYear())) + 1
@@ -28,7 +28,7 @@ const stats = [
   <Story />
   <StatsBand stats={stats} />
 
-  <ProjectRail projects={projects} />
+  {featured.length > 0 && <ProjectRail projects={featured} />}
 
   <section class="wrap latest">
     <div class="rule rv" style="--i:0">
@@ -82,7 +82,7 @@ const stats = [
     color: var(--fg-soft);
   }
 
-  @media (max-width: 620px) {
+  @media (max-width: 640px) {
     .latest { margin-top: 64px; }
     .outro { margin-top: 56px; }
   }
