@@ -15,16 +15,18 @@ interface Props {
   updatedDate?: Date;
   image?: string;
   noindex?: boolean;
+  wordBackground?: boolean;
+  defaultTheme?: 'light' | 'dark';
 }
 
-const { title, description = site.description, type = 'website', pubDate, updatedDate, image, noindex = false } = Astro.props;
+const { title, description = site.description, type = 'website', pubDate, updatedDate, image, noindex = false, wordBackground = true, defaultTheme } = Astro.props;
 const fullTitle = title ? title + ' · ' + site.name : site.name + ' · ' + site.tagline;
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
 const socialImage = image ? new URL(image, Astro.site).href : undefined;
 ---
 
 <!doctype html>
-<html lang={site.lang} data-theme="light">
+<html lang={site.lang} data-theme={defaultTheme ?? 'light'} data-default-theme={defaultTheme ?? ''}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -53,13 +55,13 @@ const socialImage = image ? new URL(image, Astro.site).href : undefined;
         try {
           var saved = localStorage.getItem('theme');
           var prefers = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          document.documentElement.dataset.theme = saved || (prefers ? 'dark' : 'light');
+          document.documentElement.dataset.theme = saved || document.documentElement.dataset.defaultTheme || (prefers ? 'dark' : 'light');
         } catch (e) {}
       })();
     </script>
   </head>
   <body>
-    <WordBackground />
+    {wordBackground && <WordBackground />}
     <CursorTrail />
     <Header />
     <main>

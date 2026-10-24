@@ -1,58 +1,47 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import AboutOrbit from '@/components/AboutOrbit.astro';
 import SocialIcons from '@/components/SocialIcons.astro';
 import { site } from '@/data/site';
 ---
 
-<BaseLayout title="关于" description="关于我。">
-  <div class="wrap page">
-    <header class="page-head reveal">
-      <h1>关于</h1>
-      <p>一个把东西写下来的人。</p>
-    </header>
+<BaseLayout title="关于" description="关于我。" wordBackground={false} defaultTheme="dark">
+  <AboutOrbit name={site.name} tagline={site.tagline} />
 
-    <div class="prose reveal">
-      <p>
-        我是{site.name}。{site.tagline}
-      </p>
-      <p>
-        这个站点是我的数字花园：技术笔记、半成品项目、和一些还没想清楚的想法。
-        没有评论区，因为我想让这里安静一点；想聊的话，邮件或者 GitHub 都能找到我。
-      </p>
+  <section class="about-content wrap" id="about-story" aria-labelledby="about-story-title">
+    <p class="eyebrow">A LITTLE ABOUT ME</p>
+    <h2 id="about-story-title">一个把东西写下来的人。</h2>
+    <p>我是{site.name}。{site.tagline}</p>
+    <p>
+      这个站点是我的数字花园：技术笔记、半成品项目、和一些还没想清楚的想法。
+      没有评论区，因为我想让这里安静一点；想聊的话，邮件或者 GitHub 都能找到我。
+    </p>
 
-      <h2>现在</h2>
-      <ul>
-        <li>在写：一些关于前端和工具链的笔记</li>
-        <li>在做：几个自用的小工具，做完会放到<a href="/projects">作品</a>页</li>
-        <li>在读：随手记在笔记里，值得的会整理成文章</li>
-      </ul>
+    <h2 class="section-title" id="about-now">现在</h2>
+    <ol class="now-list">
+      <li><span>01</span><div><h3>在写</h3><p>一些关于前端和工具链的笔记</p></div></li>
+      <li><span>02</span><div><h3>在做</h3><p>几个自用的小工具，做完会放到<a href="/projects">作品</a>页</p></div></li>
+      <li><span>03</span><div><h3>在读</h3><p>随手记在笔记里，值得的会整理成文章</p></div></li>
+    </ol>
 
-      <h2>联系我</h2>
-    </div>
-
-    <div class="reveal contact">
-      <SocialIcons />
-    </div>
-  </div>
+    <h2 class="section-title" id="about-contact">联系我</h2>
+    <SocialIcons />
+  </section>
 </BaseLayout>
 
 <style>
-  .page { padding-top: 56px; }
-  .page-head { margin-bottom: 32px; }
-  .page-head h1 { margin: 0 0 8px; font-size: 32px; letter-spacing: -0.01em; }
-  .page-head p { margin: 0; color: var(--fg-soft); font-size: 16px; }
-
-  .prose :global(h2) {
-    margin: 2em 0 .6em;
-    font-size: 20px;
-  }
-  .prose :global(p) { margin: 0 0 1.1em; }
-  .prose :global(ul) { padding-left: 1.4em; margin: 0 0 1.2em; }
-  .prose :global(li) { margin: .35em 0; }
-  .contact { margin-top: 24px; }
-
+  .about-content { max-width: 800px; padding-top: 100px; padding-bottom: 56px; }
+  .about-content .eyebrow { font-size: 11px; letter-spacing: .22em; }
+  .about-content h2 { font-size: clamp(30px, 3.3vw, 40px); font-weight: 400; line-height: 1.3; margin: 20px 0 35px; }
+  .about-content > p:not(.eyebrow) { color: var(--fg-soft); line-height: 2; margin: 0 0 18px; }
+  .about-content .section-title { font-size: 22px; margin: 68px 0 24px; }
+  .now-list { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--line); }
+  .now-list li { display: flex; gap: 36px; padding: 24px 0; border-bottom: 1px solid var(--line); }
+  .now-list li > span { flex: 0 0 25px; padding-top: 4px; color: var(--accent); font-family: var(--font-ui); font-size: 12px; }
+  .now-list h3 { margin: 0 0 6px; font-size: 17px; font-weight: 400; }
+  .now-list p { margin: 0; color: var(--fg-soft); font-size: 14px; }
   @media (max-width: 640px) {
-    .page { padding-top: 36px; }
-    .page-head h1 { font-size: 26px; }
+    .about-content { padding-top: 60px; }
+    .now-list li { gap: 22px; }
   }
 </style>

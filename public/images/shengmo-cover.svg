@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1">
+      <stop stop-color="#09162f"/>
+      <stop offset="1" stop-color="#123e86"/>
+    </linearGradient>
+    <radialGradient id="light">
+      <stop stop-color="#5bb8ff" stop-opacity=".6"/>
+      <stop offset="1" stop-color="#468eff" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="glass" width="36" height="630" patternUnits="userSpaceOnUse">
+      <path fill="#fff" fill-opacity=".035" d="M0 0h18v630H0z"/>
+      <path stroke="#fff" stroke-opacity=".05" d="M0 0v630"/>
+    </pattern>
+  </defs>
+  <path fill="url(#bg)" d="M0 0h1200v630H0z"/>
+  <ellipse cx="600" cy="460" rx="850" ry="330" fill="url(#light)" transform="rotate(-20 600 460)"/>
+  <path fill="url(#glass)" d="M0 0h1200v630H0z"/>
+  <g text-anchor="middle" font-family="Segoe UI, Microsoft YaHei, sans-serif">
+    <text x="600" y="139" fill="#c0daff" font-size="24" letter-spacing="8">ENCRE / 声墨</text>
+    <text x="600" y="310" fill="#fff" font-size="104" font-weight="600" letter-spacing="-4">开口，即成文。</text>
+    <text x="600" y="390" fill="#c0daff" font-size="26">语音输入 · AI 润色 · 自动写入光标位置</text>
+    <text x="600" y="538" fill="#a5c7ef" font-size="20" letter-spacing="3">凡有所言，皆可成文。</text>
+  </g>
+</svg>

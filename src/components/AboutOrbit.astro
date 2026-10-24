@@ -1,0 +1,377 @@
+---
+interface Props { name: string; tagline: string }
+const { name, tagline } = Astro.props;
+
+const cards = [
+  ['前端笔记', '记录前端开发中的实践、细节和那些终于想明白的问题。'],
+  ['工具箱', '从自己的日常需要出发，做一些简单好用的小工具。'],
+  ['数字花园', '留给随手记录、尚未成形的想法，以及慢慢长大的项目。'],
+  ['阅读随记', '在阅读里遇到有意思的句子和问题，就先记下来。'],
+  ['界面实验', '尝试排版、颜色和交互，看看网页还可以怎样表达。'],
+  ['开源项目', '把完成的东西放出来，也记录它们从零开始的过程。'],
+  ['生活片段', '日常里值得留下来的瞬间，先用一张空图片占位。'],
+  ['随手拍', '一张照片，一个当下，和一些无需解释的日常。'],
+  ['小小灵感', '那些一闪而过、以后也许会变成作品的念头。'],
+  ['正在学习', '保持好奇，让每次尝试都留下点什么。'],
+  ['音乐时间', '在写代码与阅读之间，留一点时间给音乐。'],
+  ['项目手记', '做了什么、为什么这样做，以及后来又改了哪些地方。'],
+  ['慢慢生长', '允许半成品留在这里，给想法一点慢慢完善的时间。'],
+  ['关于博客', '一个安静的地方，用来分享技术、作品和日常。'],
+  ['最近在做', '一些自用工具，一些网页实验，还有这个数字花园。'],
+  ['未完待续', '先保留这张空白，留给下一段故事。'],
+] as const;
+const rings = ['outer', 'inner'] as const;
+---
+
+<section class="orbit-hero" id="about-top" aria-label="关于我">
+  {rings.map((kind) => (
+    <div class:list={['orbit-ring', kind]} data-ring={kind}>
+      {cards.map((_, index) => {
+        const card = cards[(index + (kind === 'inner' ? 4 : 0)) % cards.length];
+        return (
+          <button
+            class:list={['orbit-tile', { plain: index % 3 === 1 }]}
+            type="button"
+            data-kind={kind}
+            data-index={index}
+            data-title={card[0]}
+            data-description={card[1]}
+            aria-label={`查看${card[0]}`}
+            style={`--tile-size:${[138, 152, 164, 152][index % 4]};--tex-pos:${[8, 78, 90, 56, 32][index % 5]}% ${[18, 62, 50, 12, 74][index % 5]}%`}
+          >
+            <span class="tile-caption" aria-hidden="true">{card[0]}</span>
+          </button>
+        );
+      })}
+    </div>
+  ))}
+
+  <div class="orbit-center">
+    <div class="orbit-head">
+      <h1><span class="title-mask"><span class="title-word">你好，我是</span></span><span class="title-mask"><span class="title-word">{name}。</span></span></h1>
+      <div class="orbit-subgroup">
+        <p>{tagline}<br />一些技术笔记，一些项目，和一些还没想清楚的想法。</p>
+        <div class="orbit-actions">
+          <a class="orbit-button primary" href="#about-story">认识一下 <span aria-hidden="true">↓</span></a>
+          <a class="orbit-button secondary" href="#about-now">最近在做什么 <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="tile-popover" id="tile-popover" hidden aria-label="卡片详情">
+    <h2></h2>
+    <div class="popover-media" aria-hidden="true">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m3 17 5-5 4 4 4-6 5 7"/></svg>
+    </div>
+    <p></p>
+    <button type="button">查看内容 ↗</button>
+  </aside>
+  <div class="orbit-hint" aria-hidden="true">悬停卡片 · 滚动探索</div>
+</section>
+
+<dialog class="orbit-dialog" id="orbit-dialog" aria-labelledby="orbit-dialog-title">
+  <div class="dialog-inner">
+    <div class="dialog-top"><h2 id="orbit-dialog-title"></h2><button class="dialog-close" type="button" aria-label="关闭">×</button></div>
+    <div class="dialog-media" aria-label="图片占位">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width=".6" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m3 17 5-5 4 4 4-6 5 7"/></svg>
+    </div>
+    <p class="dialog-description"></p>
+  </div>
+</dialog>
+
+<style>
+  .orbit-hero { --orbit-tile: #252523; --orbit-paper: #20201e; --orbit-tex: rgba(215,212,199,.19); height: calc(100svh - 60px); min-height: 620px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; font-family: var(--font-ui); }
+  :global([data-theme='light']) .orbit-hero { --orbit-tile: #ede8df; --orbit-paper: #fffdfa; --orbit-tex: rgba(110,99,81,.23); }
+  .orbit-ring { position: absolute; inset: 0; mask-image: linear-gradient(#000 67%, transparent 97%); }
+  .orbit-tile { position: absolute; top: 50%; left: 50%; display: block; padding: 0; border: 0; width: calc(var(--tile-size) / 1920 * 100vw); aspect-ratio: 1; margin: calc(var(--tile-size) / 1920 * -50vw) 0 0 calc(var(--tile-size) / 1920 * -50vw); border-radius: 7.5%; background: var(--orbit-tile); color: inherit; cursor: default; will-change: transform; opacity: 0; }
+  .orbit-tile::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: var(--orbit-tex); mask: url('/images/about-placeholder.svg') var(--tex-pos) / auto 150% no-repeat; pointer-events: none; }
+  .orbit-tile.plain::before { opacity: .32; }
+  .orbit-tile:hover, .orbit-tile.held { z-index: 1; }
+  .orbit-tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; z-index: 2; }
+  .tile-caption { position: absolute; left: 0; top: 100%; width: 100%; min-width: 96px; margin-top: 9px; color: var(--fg-faint); font-size: 12px; line-height: 18px; text-align: left; letter-spacing: .15px; }
+  .orbit-center { width: 100%; z-index: 3; display: flex; justify-content: center; position: relative; pointer-events: none; will-change: transform; }
+  .orbit-head { width: min(1000px, calc(100% - 240px)); display: flex; flex-direction: column; align-items: center; gap: 44px; text-align: center; }
+  .orbit-head h1 { margin: 0; font-family: var(--font); font-size: clamp(42px, 5.4vw, 90px); font-weight: 400; letter-spacing: -.04em; line-height: 1.22; text-wrap: balance; pointer-events: auto; }
+  .title-mask { display: inline-block; clip-path: inset(0 -.1em -.15em); }
+  .title-word { display: inline-block; animation: orbit-title-in .9s cubic-bezier(.86,0,.07,1) both; }
+  .title-mask:nth-child(2) .title-word { animation-delay: .075s; }
+  @keyframes orbit-title-in { from { transform: translateY(120%); } to { transform: translateY(0); } }
+  .orbit-subgroup { display: flex; flex-direction: column; align-items: center; gap: 42px; }
+  .orbit-subgroup p { color: var(--fg-soft); font-size: clamp(15px, 1.35vw, 22px); line-height: 1.8; max-width: 570px; margin: 0; pointer-events: auto; }
+  .orbit-actions { display: flex; gap: 12px; pointer-events: auto; }
+  .orbit-button { display: inline-flex; align-items: center; gap: 10px; border-radius: 9px; padding: 12px 20px; font-size: 14px; line-height: 1.35; text-decoration: none; transition: transform .2s, background-color .15s; }
+  .orbit-button:hover { text-decoration: none; transform: translateY(-2px); }
+  .orbit-button.primary { background: var(--fg); border: 1px solid var(--fg); color: var(--bg); }
+  .orbit-button.secondary { background: transparent; border: 1px solid var(--line); color: var(--fg); }
+  .orbit-button.secondary:hover { background: var(--bg-soft); }
+  .orbit-hint { position: absolute; z-index: 3; bottom: 28px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; white-space: nowrap; color: var(--fg-faint); font-size: 11px; letter-spacing: .12em; }
+  .orbit-hint::before, .orbit-hint::after { content: ''; width: 27px; height: 1px; background: var(--line); }
+  .tile-popover { position: absolute; left: 0; top: 0; z-index: 6; display: flex; flex-direction: column; align-items: flex-start; gap: 16px; width: 213px; padding: 16px; background: var(--orbit-paper); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 4px 24px #0002; opacity: 0; transform: translateY(6px) scale(.98); transition: opacity .25s, transform .25s var(--ease); pointer-events: none; }
+  .tile-popover[hidden] { display: none; }
+  .tile-popover.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+  .tile-popover.swap { opacity: 0; pointer-events: none; transform: scale(.99); transition: opacity .14s, transform .14s; }
+  .tile-popover h2 { margin: 4px 0 0; font-size: 12px; font-weight: 600; line-height: 18px; }
+  .popover-media { width: 100%; aspect-ratio: 181 / 102; background: var(--orbit-tile); border-radius: 4px; display: grid; place-items: center; color: var(--fg-faint); }
+  .popover-media svg { opacity: .3; }
+  .tile-popover p { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin: 0; color: var(--fg-soft); font-size: 12px; line-height: 18px; }
+  .tile-popover button { background: var(--orbit-paper); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; min-height: 28px; padding: 4px 12px; font-size: 12px; cursor: pointer; }
+  .tile-popover button:hover { background: var(--orbit-tile); }
+  .orbit-dialog { width: min(720px, calc(100vw - 40px)); max-height: 85vh; padding: 0; border: 1px solid var(--line); border-radius: 20px; overflow: auto; color: var(--fg); background: var(--bg-card); font-family: var(--font-ui); }
+  .orbit-dialog::backdrop { background: #0009; backdrop-filter: blur(5px); }
+  .dialog-inner { padding: 30px; }
+  .dialog-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .dialog-top h2 { margin: 0; font: 400 28px var(--font); }
+  .dialog-close { width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 50%; background: transparent; color: var(--fg); font-size: 20px; cursor: pointer; }
+  .dialog-media { display: grid; place-items: center; aspect-ratio: 16 / 9; background: var(--orbit-tile); border-radius: 10px; color: var(--fg-faint); }
+  .dialog-description { margin: 24px 0 0; color: var(--fg-soft); font-size: 14px; line-height: 1.9; }
+  @media (min-width: 1200px) and (max-width: 1439px) {
+    .orbit-tile { width: calc(var(--tile-size) * (.119792vw - .0609375rem)); margin: calc(var(--tile-size) * (.119792vw - .0609375rem) / -2) 0 0 calc(var(--tile-size) * (.119792vw - .0609375rem) / -2); }
+  }
+  @media (max-width: 1199px) {
+    .orbit-hero { height: 110svh; }
+    .orbit-ring.outer { display: none; }
+    .orbit-ring { mask-image: linear-gradient(90deg, transparent, #000 6% 94%, transparent), linear-gradient(transparent, #000 8% 67%, transparent 97%); mask-composite: intersect; }
+    .orbit-tile { width: calc(var(--tile-size) * .126606vw - 18.6301vw + 13.9609rem - var(--tile-size) * .0659929rem); margin: calc((var(--tile-size) * .126606vw - 18.6301vw + 13.9609rem - var(--tile-size) * .0659929rem) / -2) 0 0 calc((var(--tile-size) * .126606vw - 18.6301vw + 13.9609rem - var(--tile-size) * .0659929rem) / -2); }
+    .orbit-head { width: calc(100% - 120px); }
+  }
+  @media (max-width: 833px) {
+    .orbit-head { width: calc(100% - 48px); gap: 32px; }
+    .orbit-head h1 { font-size: clamp(34px, 5.4vw, 54px); }
+    .orbit-tile { width: 68px; margin: -34px 0 0 -34px; }
+    .tile-caption { display: none; }
+    .orbit-subgroup { gap: 30px; }
+  }
+  @media (max-width: 566px) {
+    .orbit-hero { height: auto; min-height: 0; padding: 88px 0 74px; flex-direction: column; }
+    .orbit-center { order: 1; }
+    .orbit-head { width: calc(100% - 40px); }
+    .orbit-head h1 { font-size: clamp(30px, 7.3vw, 44px); }
+    .title-mask:last-child { display: block; }
+    .orbit-ring.inner { position: relative; inset: auto; order: 2; width: 100%; height: clamp(88px, 27vw, 128px); margin-top: 64px; pointer-events: none; mask-image: linear-gradient(90deg, transparent, #000 8% 92%, transparent); mask-composite: add; }
+    .orbit-tile { width: clamp(88px, 27vw, 128px); margin: calc(clamp(88px, 27vw, 128px) / -2) 0 0 calc(clamp(88px, 27vw, 128px) / -2); }
+    .orbit-subgroup p { max-width: 360px; }
+    .orbit-actions { gap: 9px; }
+    .orbit-button { padding: 11px 14px; font-size: 13px; }
+    .tile-popover, .orbit-hint { display: none; }
+    .dialog-inner { padding: 20px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .title-word { animation: none; }
+    .orbit-button, .tile-popover { transition: none; }
+  }
+</style>
+
+<script>
+  const hero = document.querySelector<HTMLElement>('.orbit-hero');
+  const center = hero?.querySelector<HTMLElement>('.orbit-center');
+  const pop = hero?.querySelector<HTMLElement>('.tile-popover');
+  const dialog = document.querySelector<HTMLDialogElement>('.orbit-dialog');
+  if (hero && center && pop && dialog) {
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const cards = [...hero.querySelectorAll<HTMLButtonElement>('.orbit-tile')].map((el) => {
+      const kind = el.dataset.kind as 'inner' | 'outer';
+      const index = Number(el.dataset.index);
+      return {
+        el, kind,
+        base: index / 16 * Math.PI * 2 + (kind === 'inner' ? Math.PI / 16 : 0),
+        q: (Math.random() - .5) / 8,
+        fadeOrder: Math.random(),
+        scale: 1,
+        opacity: 1,
+      };
+    });
+    type Card = typeof cards[number];
+    const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+    let width = 0, height = 0, innerRadius = 0, outerRadius = 0, stripWidth = 0, mobile = false;
+    let phase = performance.now() / 1000, last = performance.now(), entryStart = last;
+    let previousScroll = scrollY, lastWheel = 0, acceleration = 0, accelerationTarget = 0, radial = 0, radialTarget = 0, speed = 1;
+    let hovered: Card | null = null, active: Card | null = null, popHeld = false, raf = 0, visible = true, restoringFocus = false;
+    let openTimer = 0, closeTimer = 0, swapTimer = 0, hideTimer = 0, pulseTimer = 0;
+    let lastFocus: HTMLElement | null = null;
+
+    function resize() {
+      width = hero!.clientWidth;
+      height = hero!.clientHeight;
+      mobile = innerWidth <= 566;
+      for (const card of cards) card.el.tabIndex = mobile ? -1 : 0;
+      const t = clamp((innerWidth - 1200) / 240, 0, 1);
+      innerRadius = innerWidth >= 1200 ? Math.max(.405 + (650 / 1920 - .405) * t, 375 / width) : Math.max(.405, 350 / width);
+      outerRadius = innerRadius * 1000 / 650;
+      stripWidth = 16 * (hero!.querySelector<HTMLElement>('.orbit-ring.inner .orbit-tile')?.offsetWidth ?? 88) * 1.2;
+      if (reduced) render(performance.now(), 0);
+    }
+
+    function pulse(delta: number) {
+      accelerationTarget = delta / 800;
+      radialTarget = delta / 40;
+      clearTimeout(pulseTimer);
+      pulseTimer = window.setTimeout(() => { accelerationTarget = 0; radialTarget = 0; }, 120);
+    }
+
+    function positionPop() {
+      if (!active || pop!.hidden) return;
+      const tile = active.el.getBoundingClientRect();
+      const stage = hero!.getBoundingClientRect();
+      const pw = pop!.offsetWidth, ph = pop!.offsetHeight;
+      const proposedX = tile.left + tile.width / 2 < stage.left + stage.width / 2 ? tile.right - stage.left + 14 : tile.left - stage.left - 14 - pw;
+      const x = clamp(proposedX, 12, width - pw - 12);
+      const proposedY = tile.top - stage.top + tile.height / 2 - ph / 2;
+      const minY = Math.max(12, 72 - stage.top);
+      const maxY = Math.min(height, innerHeight - stage.top) - ph - 12;
+      pop!.style.left = x + 'px';
+      pop!.style.top = clamp(proposedY, minY, Math.max(minY, maxY)) + 'px';
+    }
+
+    function fillPop(card: Card) {
+      pop!.querySelector('h2')!.textContent = card.el.dataset.title ?? '';
+      pop!.querySelector('p')!.textContent = card.el.dataset.description ?? '';
+      positionPop();
+    }
+
+    function showPop(card: Card) {
+      clearTimeout(closeTimer); clearTimeout(hideTimer); clearTimeout(swapTimer);
+      const swapping = active && active !== card && pop!.classList.contains('open');
+      active?.el.classList.remove('held');
+      active = card;
+      card.el.classList.add('held');
+      if (swapping) {
+        pop!.classList.add('swap');
+        swapTimer = window.setTimeout(() => { fillPop(card); pop!.classList.remove('swap'); }, 150);
+      } else {
+        fillPop(card);
+        pop!.hidden = false;
+        positionPop();
+        requestAnimationFrame(() => pop!.classList.add('open'));
+      }
+    }
+
+    function hidePop() {
+      clearTimeout(openTimer); clearTimeout(swapTimer);
+      active?.el.classList.remove('held');
+      active = null; popHeld = false;
+      pop!.classList.remove('open', 'swap');
+      hideTimer = window.setTimeout(() => { if (!pop!.classList.contains('open')) pop!.hidden = true; }, 260);
+    }
+
+    const scheduleClose = () => {
+      clearTimeout(closeTimer);
+      closeTimer = window.setTimeout(hidePop, 180);
+    };
+
+    for (const card of cards) {
+      card.el.addEventListener('pointerenter', (event) => {
+        if (event.pointerType === 'touch' || card.opacity < .35 || mobile) return;
+        hovered = card; clearTimeout(closeTimer); clearTimeout(openTimer);
+        if (active !== card) openTimer = window.setTimeout(() => showPop(card), active ? 140 : 120);
+      });
+      card.el.addEventListener('pointerleave', (event) => {
+        if (event.pointerType === 'touch') return;
+        if (hovered === card) hovered = null;
+        clearTimeout(openTimer);
+        if (active) scheduleClose();
+      });
+      card.el.addEventListener('focus', () => { if (!mobile && !restoringFocus) { hovered = card; showPop(card); } });
+      card.el.addEventListener('blur', () => { if (hovered === card) hovered = null; if (active) scheduleClose(); });
+      card.el.addEventListener('click', () => { if (!mobile) { hovered = card; showPop(card); } });
+    }
+    pop.addEventListener('pointerenter', () => { popHeld = true; clearTimeout(closeTimer); });
+    pop.addEventListener('pointerleave', () => { popHeld = false; if (active) scheduleClose(); });
+    pop.querySelector('button')!.addEventListener('click', () => {
+      if (!active) return;
+      lastFocus = active.el;
+      dialog!.querySelector('h2')!.textContent = active.el.dataset.title ?? '';
+      dialog!.querySelector('.dialog-description')!.textContent = active.el.dataset.description ?? '';
+      hidePop(); hovered = null;
+      dialog!.showModal();
+      document.body.style.overflow = 'hidden';
+    });
+    dialog.querySelector('.dialog-close')!.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', (event) => {
+      const r = dialog.getBoundingClientRect();
+      if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) dialog.close();
+    });
+    dialog.addEventListener('close', () => {
+      document.body.style.overflow = '';
+      restoringFocus = true;
+      lastFocus?.focus({ preventScroll: true });
+      restoringFocus = false;
+    });
+    document.addEventListener('keydown', (event) => { if (event.key === 'Escape') hidePop(); });
+    document.addEventListener('pointerdown', (event) => {
+      if (event.pointerType === 'touch' && active && !pop!.contains(event.target as Node) && !active.el.contains(event.target as Node)) hidePop();
+    });
+
+    function render(now: number, dt: number) {
+      const entry = Math.max(0, (now - entryStart - 200) / 1000);
+      const spread = reduced ? 1 : 1 - Math.pow(2, -10 * clamp(entry / 2, 0, 1));
+      const scale = reduced ? 1 : 1 - Math.pow(1 - clamp(entry / 1.6, 0, 1), 3);
+      const intro = reduced ? 0 : Math.pow(1 - clamp(entry / 2.4, 0, 1), 3);
+      const held = !!hovered || popHeld || dialog!.open;
+      const speedTarget = held ? 0 : 1;
+      speed += (speedTarget - speed) * (1 - Math.exp(-dt / (held ? .12 : .24)));
+      acceleration += (accelerationTarget - acceleration) * (1 - Math.exp(-dt / .1));
+      radial += (radialTarget - radial) * (1 - Math.exp(-dt / .2));
+      if (!reduced && visible && !document.hidden) phase += (dt * (1 + 9 * intro) + acceleration * dt * 60) * speed;
+      const perturb = radial * speed + 3 * intro;
+      const progress = clamp(scrollY / (height * .7), 0, 1);
+      const fadeSpan = .6 + .06 * 31;
+      const shift = innerWidth >= 1200 && !reduced ? -clamp(scrollY / (height * .8), 0, 1) * innerHeight * .1 : 0;
+      center!.style.transform = `translateY(${shift}px)`;
+
+      for (const card of cards) {
+        const targetScale = hovered === card ? 1.06 : 1;
+        card.scale += (targetScale - card.scale) * (1 - Math.exp(-dt / .13));
+        let x: number, y: number;
+        if (mobile) {
+          if (card.kind === 'outer') continue;
+          const angle = phase / 7.8 + card.base;
+          const fraction = ((angle / (2 * Math.PI)) % 1 + 1) % 1;
+          x = spread * ((.5 - fraction) * stripWidth + card.q * perturb * .25 * stripWidth / 16);
+          y = 0;
+        } else {
+          const angle = (card.kind === 'inner' ? -1 : 1) * phase / (card.kind === 'inner' ? 9.36 : 7.8) + card.base;
+          const radius = 1 / (card.kind === 'inner' ? innerRadius : outerRadius) + card.q * perturb;
+          x = spread * Math.sin(angle) * width / radius;
+          y = spread * Math.cos(angle) * width / radius;
+        }
+        const rotation = card.q * perturb * 20;
+        card.el.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(${rotation}deg) scale(${scale * card.scale})`;
+        card.opacity = reduced ? 1 : 1 - clamp((progress * fadeSpan - card.fadeOrder * 31 * .06) / .6, 0, 1);
+        card.el.style.opacity = String(card.opacity);
+        card.el.style.pointerEvents = card.opacity < .35 ? 'none' : '';
+      }
+      if (active) active.opacity < .35 ? hidePop() : positionPop();
+    }
+
+    function tick(now: number) {
+      const dt = Math.min((now - last) / 1000, .05);
+      last = now;
+      render(now, dt);
+      raf = requestAnimationFrame(tick);
+    }
+
+    resize();
+    if (reduced) render(performance.now(), 0);
+    addEventListener('resize', resize, { passive: true });
+    addEventListener('wheel', (event) => {
+      if (!reduced && visible && event.deltaY) { lastWheel = performance.now(); pulse(event.deltaY); }
+    }, { passive: true });
+    addEventListener('scroll', () => {
+      const delta = scrollY - previousScroll;
+      previousScroll = scrollY;
+      if (reduced) render(performance.now(), 0);
+      else if (visible && delta && performance.now() - lastWheel > 200) pulse(clamp(delta, -160, 160));
+    }, { passive: true });
+    new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      if (reduced) return;
+      if (!visible && raf) { cancelAnimationFrame(raf); raf = 0; }
+      else if (visible && !document.hidden && !raf) { last = performance.now(); raf = requestAnimationFrame(tick); }
+    }).observe(hero);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && raf) { cancelAnimationFrame(raf); raf = 0; }
+      else if (!document.hidden && visible && !reduced && !raf) { last = performance.now(); raf = requestAnimationFrame(tick); }
+    });
+  }
+</script>

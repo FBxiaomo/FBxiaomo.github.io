@@ -30,4 +30,14 @@ export const projects: Project[] = [
     featured: true,
     cover: '/images/digital-gallery-cover.png',
   },
+  {
+    name: '声墨',
+    desc: '语音输入法，让声音化为文字，减少日常打字负担。',
+    href: 'https://fbxiaomo.github.io/shengmo/',
+    tags: ['语音输入', 'Tauri', 'Rust'],
+    status: 'active',
+    external: true,
+    featured: true,
+    cover: '/images/shengmo-cover.svg',
+  },
 ];
