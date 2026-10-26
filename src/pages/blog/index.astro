@@ -23,31 +23,192 @@ const tags = [...tagCount.entries()].sort((a, b) => b[1] - a[1]);
   <div class="wrap reading-panel">
     <header class="page-head reveal">
       <h1>博客</h1>
-      <p>共 {posts.length} 篇 · 按时间倒序</p>
+      <p>共 {posts.length} 篇 · 支持搜索与标签筛选</p>
     </header>
+
+    <div class="list-toolbar reveal">
+      <label class="search-box">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" />
+          <path d="m20 20-3.5-3.5" />
+        </svg>
+        <input
+          id="post-search"
+          type="search"
+          placeholder="搜索标题、描述或标签…"
+          autocomplete="off"
+          spellcheck="false"
+          aria-label="搜索文章"
+        />
+      </label>
+
+      <div class="sort-toggle" role="group" aria-label="按发布时间排序">
+        <button type="button" class="sort-btn active" data-sort="desc" aria-pressed="true">最新在前</button>
+        <button type="button" class="sort-btn" data-sort="asc" aria-pressed="false">最早在前</button>
+      </div>
+    </div>
+
+    <div class="filter-status mono" id="filter-status" hidden>
+      <span id="status-text"></span>
+      <button type="button" class="reset-link" id="reset-filters">清除筛选</button>
+    </div>
 
     {posts.length === 0 && (
       <p class="empty">还没有文章，过段时间再来看看吧。</p>
     )}
 
-    {years.map(([year, list]) => (
-      <section class="year-block reveal">
-        <h2 class="year">{year}</h2>
-        <PostList posts={list} />
-      </section>
-    ))}
+    <div id="list-root">
+      {years.map(([year, list]) => (
+        <section class="year-block reveal" data-year={year}>
+          <h2 class="year">{year}</h2>
+          <PostList posts={list} />
+        </section>
+      ))}
+    </div>
+
+    <p class="empty" id="no-result" hidden>没有找到匹配的文章，换个关键词或标签试试。</p>
 
     {tags.length > 0 && (
-      <div class="tag-cloud reveal">
+      <div class="tag-cloud reveal" id="tag-cloud">
         <span class="tag-label mono">标签</span>
-        {tags.map(([t, n]) => <span class="tag">{t}<em>{n}</em></span>)}
+        {tags.map(([t, n]) => (
+          <button type="button" class="tag" data-tag={t} aria-pressed="false">{t}<em>{n}</em></button>
+        ))}
       </div>
     )}
   </div>
 </BaseLayout>
 
+<script>
+  // ---- 列表筛选：搜索 + 标签 + 排序（均支持 URL 参数 ?q= &tag= &sort=） ----
+  const root = document.getElementById('list-root');
+  const items = root ? [...root.querySelectorAll<HTMLElement>('li[data-search]')] : [];
+  const blocks = root ? [...root.querySelectorAll('.year-block')] : [];
+  const originalItems = new Map(blocks.map((block) => [block, [...block.querySelectorAll('.post-list > li')]]));
+  const input = document.getElementById('post-search') as HTMLInputElement | null;
+  const sortBtns = [...document.querySelectorAll<HTMLButtonElement>('.sort-btn')];
+  const status = document.getElementById('filter-status');
+  const statusText = document.getElementById('status-text');
+  const resetBtn = document.getElementById('reset-filters');
+  const noResult = document.getElementById('no-result');
+  const tagBtns = [...document.querySelectorAll<HTMLButtonElement>('#tag-cloud .tag')];
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const state = { q: '', tag: '', sort: 'desc' };
+
+  // 从 URL 恢复筛选状态（文章页标签链接 /blog?tag=x 依赖此能力）
+  const params = new URLSearchParams(location.search);
+  state.q = params.get('q') ?? '';
+  state.tag = params.get('tag') ?? '';
+  const sortParam = params.get('sort');
+  if (sortParam === 'asc' || sortParam === 'desc') state.sort = sortParam;
+  if (input) input.value = state.q;
+
+  function syncUrl() {
+    const p = new URLSearchParams();
+    if (state.q.trim()) p.set('q', state.q.trim());
+    if (state.tag) p.set('tag', state.tag);
+    if (state.sort === 'asc') p.set('sort', 'asc');
+    const qs = p.toString();
+    history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));
+  }
+
+  function applySort() {
+    if (!root) return;
+    const ordered = state.sort === 'desc' ? blocks : [...blocks].reverse();
+    root.append(...ordered);
+    for (const b of ordered) {
+      const ul = b.querySelector('.post-list');
+      if (!ul) continue;
+      const lis = [...(originalItems.get(b) ?? [])];
+      if (state.sort === 'asc') lis.reverse();
+      ul.append(...lis);
+    }
+  }
+
+  function apply() {
+    const q = state.q.trim().toLowerCase();
+    let visible = 0;
+
+    for (const li of items) {
+      const okQ = !q || (li.dataset.search ?? '').includes(q);
+      const tagList = (li.dataset.tags ?? '').split('|').filter(Boolean);
+      const okT = !state.tag || tagList.includes(state.tag);
+      const show = okQ && okT;
+      li.toggleAttribute('hidden', !show);
+      if (show) visible++;
+    }
+
+    for (const b of blocks) {
+      const any = b.querySelector('li[data-search]:not([hidden])');
+      b.toggleAttribute('hidden', !any);
+    }
+
+    const filtering = q.length > 0 || state.tag.length > 0;
+    if (status) status.hidden = !filtering;
+    if (statusText) statusText.textContent = `找到 ${visible} 篇`;
+    if (noResult) noResult.hidden = visible > 0;
+
+    for (const btn of tagBtns) {
+      const on = btn.dataset.tag === state.tag;
+      btn.classList.toggle('active', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+    for (const b of sortBtns) {
+      const on = b.dataset.sort === state.sort;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+
+    applySort();
+    syncUrl();
+  }
+
+  input?.addEventListener('input', () => {
+    state.q = input.value;
+    apply();
+  });
+  input?.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      input.value = '';
+      state.q = '';
+      apply();
+    }
+  });
+
+  sortBtns.forEach((b) =>
+    b.addEventListener('click', () => {
+      state.sort = b.dataset.sort ?? 'desc';
+      apply();
+    })
+  );
+
+  tagBtns.forEach((b) =>
+    b.addEventListener('click', () => {
+      state.tag = state.tag === b.dataset.tag ? '' : (b.dataset.tag ?? '');
+      apply();
+      if (state.tag) {
+        document.querySelector('.list-toolbar')?.scrollIntoView({
+          behavior: reduced ? 'auto' : 'smooth',
+          block: 'start',
+        });
+      }
+    })
+  );
+
+  resetBtn?.addEventListener('click', () => {
+    state.q = '';
+    state.tag = '';
+    if (input) input.value = '';
+    apply();
+    input?.focus();
+  });
+
+  apply();
+</script>
+
 <style>
-  .page-head { margin-bottom: 32px; }
+  .page-head { margin-bottom: 28px; }
   .page-head h1 {
     margin: 0 0 8px;
     font-size: 32px;
@@ -60,6 +221,90 @@ const tags = [...tagCount.entries()].sort((a, b) => b[1] - a[1]);
     font-family: var(--font-ui);
   }
 
+  .list-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .search-box {
+    flex: 1;
+    min-width: 220px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    cursor: text;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .search-box:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .search-box svg { flex: none; color: var(--fg-faint); }
+  .search-box input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: none;
+    color: var(--fg);
+    font: 14px/1.4 var(--font-ui);
+  }
+  .search-box input::placeholder { color: var(--fg-faint); }
+  .search-box input::-webkit-search-cancel-button { cursor: pointer; }
+
+  .sort-toggle {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+  .sort-btn {
+    font: 600 12.5px/1 var(--font-ui);
+    padding: 7px 12px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--fg-soft);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color .15s ease, background .15s ease;
+  }
+  .sort-btn:hover { color: var(--fg); }
+  .sort-btn.active {
+    background: var(--bg-card);
+    color: var(--accent);
+    box-shadow: var(--shadow);
+  }
+
+  .filter-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 14px;
+    font-size: 12.5px;
+  }
+  .filter-status[hidden] { display: none; }
+  .reset-link {
+    border: 0;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    font: inherit;
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .reset-link:hover { opacity: .8; }
+
   .year-block { margin-bottom: 8px; }
   .year {
     margin: 36px 0 4px;
@@ -69,6 +314,7 @@ const tags = [...tagCount.entries()].sort((a, b) => b[1] - a[1]);
     letter-spacing: .1em;
     color: var(--fg-faint);
   }
+  .year-block[hidden] .year { margin-top: 0; }
 
   .empty {
     color: var(--fg-soft);
@@ -77,6 +323,7 @@ const tags = [...tagCount.entries()].sort((a, b) => b[1] - a[1]);
     background: var(--bg-soft);
     border-radius: var(--radius);
   }
+  #no-result { margin: 8px 0; }
 
   .tag-cloud {
     display: flex;
@@ -99,15 +346,28 @@ const tags = [...tagCount.entries()].sort((a, b) => b[1] - a[1]);
     background: var(--bg-soft);
     color: var(--fg-soft);
     border: 1px solid var(--line);
+    cursor: pointer;
+    transition: color .15s ease, border-color .15s ease, background .15s ease;
+  }
+  .tag:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .tag.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg);
   }
   .tag em {
     font-style: normal;
     font-size: 10px;
     color: var(--fg-faint);
   }
+  .tag.active em { color: var(--bg); opacity: .65; }
 
   @media (max-width: 640px) {
     .page-head h1 { font-size: 26px; }
     .year { margin-top: 26px; }
+    .sort-btn { padding: 7px 10px; font-size: 12px; }
   }
 </style>

@@ -12,7 +12,10 @@ const { posts, showDesc = true } = Astro.props;
 
 <ul class="post-list">
   {posts.map((post) => (
-    <li>
+    <li
+      data-search={`${post.data.title} ${post.data.description} ${post.data.tags.join(' ')}`.toLowerCase()}
+      data-tags={post.data.tags.join('|')}
+    >
       <a class="post-item" href={'/blog/' + post.id + '/'}>
         <time class="post-date mono" datetime={post.data.pubDate.toISOString()}>
           {formatDate(post.data.pubDate)}

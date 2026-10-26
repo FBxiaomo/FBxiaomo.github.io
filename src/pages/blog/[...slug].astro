@@ -20,56 +20,393 @@ const all = await getPublishedPosts();
 const idx = all.findIndex((p) => p.id === post.id);
 const next = all[idx + 1];
 const prev = all[idx - 1];
+
+// 相关文章：按共同标签数打分，同分取更新者，最多 3 篇
+const related = all
+  .filter((p) => p.id !== post.id)
+  .map((p) => ({
+    p,
+    score: p.data.tags.filter((t) => post.data.tags.includes(t)).length,
+  }))
+  .filter((x) => x.score > 0)
+  .sort((a, b) => b.score - a.score || b.p.data.pubDate.valueOf() - a.p.data.pubDate.valueOf())
+  .slice(0, 3);
 ---
 
 <BaseLayout title={post.data.title} description={post.data.description} type="article" pubDate={post.data.pubDate} updatedDate={post.data.updatedDate} image={post.data.cover}>
-  <article class="wrap reading-panel">
-    <header class="post-head">
-      <h1 class="post-title">{post.data.title}</h1>
-      <div class="post-meta mono">
-        <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
-        <span class="dot">·</span>
-        <span>{readingTime(post.body)} 分钟</span>
-        {post.data.updatedDate && (
-          <>
-            <span class="dot">·</span>
-            <span>更新于 {formatDate(post.data.updatedDate)}</span>
-          </>
-        )}
-        {post.data.tags.length > 0 && (
-          <>
-            <span class="dot">·</span>
-            <span class="tags">
-              {post.data.tags.map((t: string) => <span class="tag">{t}</span>)}
-            </span>
-          </>
-        )}
+  <div class="progress" id="read-progress" aria-hidden="true"></div>
+
+  <div class="article-layout" id="article-layout" data-toc-side="right">
+    <div class="article-main">
+      <article class="wrap reading-panel">
+      <header class="post-head">
+        <h1 class="post-title">{post.data.title}</h1>
+        <div class="post-meta mono">
+          <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+          <span class="dot">·</span>
+          <span>{readingTime(post.body)} 分钟</span>
+          {post.data.updatedDate && (
+            <>
+              <span class="dot">·</span>
+              <span>更新于 {formatDate(post.data.updatedDate)}</span>
+            </>
+          )}
+          {post.data.tags.length > 0 && (
+            <>
+              <span class="dot">·</span>
+              <span class="tags">
+                {post.data.tags.map((t: string) => (
+                  <a class="tag" href={'/blog/?tag=' + encodeURIComponent(t)} title={'查看标签「' + t + '」的文章'}>{t}</a>
+                ))}
+              </span>
+            </>
+          )}
+        </div>
+      </header>
+
+      <div class="prose">
+        {post.data.cover && <img src={post.data.cover} alt={post.data.title + ' 封面'} class="post-cover" />}
+        <Content />
       </div>
-    </header>
 
-    <div class="prose">
-      {post.data.cover && <img src={post.data.cover} alt={post.data.title + ' 封面'} class="post-cover" />}
-      <Content />
+      {post.data.source && (
+        <p class="source-note">本文同步自 <a href={post.data.source.url} target="_blank" rel="noopener noreferrer">{post.data.source.label} · 查看原文 ↗</a></p>
+      )}
+
+      {related.length > 0 && (
+        <section class="related">
+          <h2 class="related-title mono">相关文章</h2>
+          <div class="related-grid">
+            {related.map(({ p }) => (
+              <a class="related-card" href={'/blog/' + p.id + '/'}>
+                <strong>{p.data.title}</strong>
+                <span class="mono">{formatDate(p.data.pubDate)}</span>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <nav class="pager">
+        {prev
+          ? <a class="pager-item" href={'/blog/' + prev.id + '/'}><span class="mono">← 上一篇</span><strong>{prev.data.title}</strong></a>
+          : <span />}
+        {next
+          ? <a class="pager-item next" href={'/blog/' + next.id + '/'}><span class="mono">下一篇 →</span><strong>{next.data.title}</strong></a>
+          : <span />}
+      </nav>
+
+      <p class="back"><a href="/blog">← 返回列表</a></p>
+      </article>
     </div>
+    <button id="toc-restore" class="toc-restore" type="button" aria-label="展开文章目录" title="展开目录" hidden>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" /></svg>
+    </button>
 
-    {post.data.source && (
-      <p class="source-note">本文同步自 <a href={post.data.source.url} target="_blank" rel="noopener noreferrer">{post.data.source.label} · 查看原文 ↗</a></p>
-    )}
-
-    <nav class="pager">
-      {prev
-        ? <a class="pager-item" href={'/blog/' + prev.id + '/'}><span class="mono">← 上一篇</span><strong>{prev.data.title}</strong></a>
-        : <span />}
-      {next
-        ? <a class="pager-item next" href={'/blog/' + next.id + '/'}><span class="mono">下一篇 →</span><strong>{next.data.title}</strong></a>
-        : <span />}
-    </nav>
-
-    <p class="back"><a href="/blog">← 返回列表</a></p>
-  </article>
+    <aside class="toc-col">
+      <div class="toc-controls">
+        <button id="toc-switch-side" type="button" aria-label="将目录移到左侧" title="移到左侧">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16M9 7l-5 5 5 5M15 7l5 5-5 5" /></svg>
+        </button>
+        <button id="toc-hide" type="button" aria-label="收起文章目录" title="收起目录">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5l14 14M19 5 5 19" /></svg>
+        </button>
+      </div>
+      <nav id="toc" class="toc" aria-label="文章目录" hidden></nav>
+    </aside>
+  </div>
 </BaseLayout>
 
+<script>
+  // ---- 阅读进度条 ----
+  const bar = document.getElementById('read-progress');
+  let ticking = false;
+
+  function updateProgress() {
+    ticking = false;
+    if (!bar) return;
+    const doc = document.documentElement;
+    const max = doc.scrollHeight - innerHeight;
+    const p = max > 0 ? Math.min(1, scrollY / max) : 0;
+    bar.style.width = (p * 100).toFixed(2) + '%';
+  }
+
+  addEventListener(
+    'scroll',
+    () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(updateProgress);
+    },
+    { passive: true }
+  );
+  addEventListener('resize', updateProgress, { passive: true });
+  updateProgress();
+
+  // ---- 自动目录：提取正文 h2/h3，生成锚点并滚动高亮当前章节 ----
+  const prose = document.querySelector('.prose');
+  const toc = document.getElementById('toc');
+  const layout = document.getElementById('article-layout');
+  const articleMain = document.querySelector<HTMLElement>('.article-main');
+  const tocCol = document.querySelector<HTMLElement>('.toc-col');
+  const switchSide = document.getElementById('toc-switch-side');
+  const hideToc = document.getElementById('toc-hide');
+  const restoreToc = document.getElementById('toc-restore');
+  const headings = prose ? [...prose.querySelectorAll<HTMLElement>('h2, h3')] : [];
+
+  if (toc && layout && headings.length >= 3) {
+    const slug = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '-');
+    const used = new Set([...document.querySelectorAll<HTMLElement>('[id]')].map((el) => el.id));
+    const hEls: Array<[HTMLElement, string]> = [];
+
+    for (const h of headings) {
+      const text = h.textContent?.trim() ?? '';
+      let id = h.id;
+      if (!id) {
+        const base = slug(text) || 'section';
+        id = base;
+        for (let n = 2; used.has(id); n++) id = `${base}-${n}`;
+        h.id = id;
+        used.add(id);
+      }
+      hEls.push([h, id]);
+    }
+
+    const ul = document.createElement('ul');
+    for (const [h, id] of hEls) {
+      const li = document.createElement('li');
+      li.className = h.tagName === 'H3' ? 'lv3' : 'lv2';
+      const a = document.createElement('a');
+      a.href = '#' + id;
+      a.textContent = h.textContent ?? '';
+      li.appendChild(a);
+      ul.appendChild(li);
+    }
+
+    const title = document.createElement('p');
+    title.className = 'toc-title mono';
+    title.textContent = '目录';
+    toc.append(title, ul);
+    toc.hidden = false;
+    layout.dataset.tocReady = 'true';
+
+    let side: 'left' | 'right' = 'right';
+    let hidden = false;
+    try {
+      if (localStorage.getItem('blogTocSide') === 'left') side = 'left';
+      hidden = localStorage.getItem('blogTocHidden') === 'true';
+    } catch (e) {}
+
+    function updateTocLayout(showRestore = hidden) {
+      layout!.dataset.tocSide = side;
+      layout!.dataset.tocHidden = hidden ? 'true' : 'false';
+      if (restoreToc) restoreToc.hidden = !showRestore;
+      const destination = side === 'right' ? '左侧' : '右侧';
+      switchSide?.setAttribute('aria-label', `将目录移到${destination}`);
+      switchSide?.setAttribute('title', `移到${destination}`);
+    }
+
+    let moving = false;
+    const easing = 'cubic-bezier(.22, 1, .36, 1)';
+    const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    async function slideArticle(from: DOMRect, duration = 480) {
+      if (!articleMain || reducedMotion()) return;
+      const to = articleMain.getBoundingClientRect();
+      const dx = from.left - to.left;
+      if (Math.abs(dx) < 1) return;
+      await articleMain.animate(
+        [{ transform: `translateX(${dx}px)` }, { transform: 'translateX(0)' }],
+        { duration, easing }
+      ).finished.catch(() => {});
+    }
+
+    switchSide?.addEventListener('click', async () => {
+      if (moving) return;
+      moving = true;
+      const articleFrom = articleMain?.getBoundingClientRect();
+      const tocFrom = tocCol?.getBoundingClientRect();
+      side = side === 'right' ? 'left' : 'right';
+      updateTocLayout();
+      try { localStorage.setItem('blogTocSide', side); } catch (e) {}
+      const animations: Promise<unknown>[] = [];
+      if (articleFrom) animations.push(slideArticle(articleFrom));
+      if (tocCol && tocFrom && !reducedMotion()) {
+        const tocTo = tocCol.getBoundingClientRect();
+        animations.push(tocCol.animate(
+          [{ transform: `translateX(${tocFrom.left - tocTo.left}px)`, opacity: .45 }, { transform: 'translateX(0)', opacity: 1 }],
+          { duration: 520, easing }
+        ).finished.catch(() => {}));
+      }
+      await Promise.all(animations);
+      moving = false;
+    });
+
+    hideToc?.addEventListener('click', async () => {
+      if (moving) return;
+      moving = true;
+      if (tocCol && !reducedMotion()) {
+        const direction = side === 'right' ? -32 : 32;
+        const exit = tocCol.animate(
+          [{ opacity: 1, transform: 'translateX(0)' }, { opacity: 0, transform: `translateX(${direction}px)` }],
+          { duration: 240, easing, fill: 'forwards' }
+        );
+        await exit.finished.catch(() => {});
+        exit.cancel();
+      }
+      const articleFrom = articleMain?.getBoundingClientRect();
+      hidden = true;
+      // 底板移动时保持展开按钮隐藏，避免 transform 临时创建的图层盖过正文。
+      updateTocLayout(false);
+      try { localStorage.setItem('blogTocHidden', 'true'); } catch (e) {}
+      if (articleFrom) await slideArticle(articleFrom, 460);
+      if (restoreToc) restoreToc.hidden = false;
+      if (restoreToc && !reducedMotion()) {
+        const direction = side === 'right' ? -12 : 12;
+        await restoreToc.animate(
+          [{ opacity: 0, transform: `translateX(${direction}px)` }, { opacity: 1, transform: 'translateX(0)' }],
+          { duration: 260, easing }
+        ).finished.catch(() => {});
+      }
+      restoreToc?.focus({ preventScroll: true });
+      moving = false;
+    });
+
+    restoreToc?.addEventListener('click', async () => {
+      if (moving) return;
+      moving = true;
+      const articleFrom = articleMain?.getBoundingClientRect();
+      hidden = false;
+      updateTocLayout();
+      try { localStorage.setItem('blogTocHidden', 'false'); } catch (e) {}
+      const animations: Promise<unknown>[] = [];
+      if (articleFrom) animations.push(slideArticle(articleFrom, 460));
+      if (tocCol && !reducedMotion()) {
+        const direction = side === 'right' ? -32 : 32;
+        animations.push(tocCol.animate(
+          [{ opacity: 0, transform: `translateX(${direction}px)` }, { opacity: 1, transform: 'translateX(0)' }],
+          { duration: 460, delay: 70, easing, fill: 'backwards' }
+        ).finished.catch(() => {}));
+      }
+      await Promise.all(animations);
+      hideToc?.focus({ preventScroll: true });
+      moving = false;
+    });
+    updateTocLayout();
+
+    // 滚动时高亮当前章节
+    const links = [...ul.querySelectorAll<HTMLAnchorElement>('a')];
+    let spyTicking = false;
+
+    function spy() {
+      spyTicking = false;
+      let current = -1;
+      for (let i = 0; i < hEls.length; i++) {
+        if (hEls[i][0].getBoundingClientRect().top <= 140) current = i;
+      }
+      links.forEach((a, i) => a.classList.toggle('cur', i === current));
+    }
+
+    addEventListener(
+      'scroll',
+      () => {
+        if (spyTicking) return;
+        spyTicking = true;
+        requestAnimationFrame(spy);
+      },
+      { passive: true }
+    );
+    spy();
+  }
+</script>
+
 <style>
+  .progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 60;
+    height: 3px;
+    width: 0;
+    background: var(--accent);
+    transition: width .1s linear;
+  }
+
+  .article-layout {
+    display: grid;
+    grid-template-columns: minmax(0, var(--maxw));
+    column-gap: 48px;
+    justify-content: center;
+    align-items: start;
+  }
+  .article-main { position: relative; z-index: 1; min-width: 0; }
+  .article-main > article { position: relative; z-index: 1; }
+  .toc-col {
+    position: sticky;
+    top: 96px;
+    max-height: calc(100vh - 130px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    display: none;
+    padding-top: 48px;
+  }
+  .toc-controls {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    gap: 5px;
+    padding: 0 0 10px;
+    background: var(--bg);
+  }
+  .toc-controls button, .toc-restore {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--bg-card);
+    color: var(--fg-soft);
+    cursor: pointer;
+  }
+  .toc-controls button:hover, .toc-restore:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .toc-restore {
+    display: none;
+    position: fixed;
+    top: clamp(112px, 22vh, 180px);
+    left: calc(50% + var(--maxw) / 2 - 24px);
+    z-index: 0;
+    width: 48px;
+    height: 38px;
+    padding-left: 20px;
+    border-radius: 0 9px 9px 0;
+    box-shadow: var(--shadow);
+  }
+  .toc-restore[hidden] { display: none; }
+  .article-layout[data-toc-side='left'] .toc-restore {
+    left: calc(50% - var(--maxw) / 2 - 24px);
+    padding-left: 0;
+    padding-right: 20px;
+    border-radius: 9px 0 0 9px;
+  }
+  @media (min-width: 1200px) {
+    .article-layout[data-toc-ready='true'][data-toc-hidden='false'] {
+      grid-template-columns: minmax(0, var(--maxw)) 200px;
+    }
+    .article-layout[data-toc-ready='true'][data-toc-hidden='false'] .toc-col { display: block; }
+    .article-layout[data-toc-ready='true'][data-toc-hidden='false'][data-toc-side='left'] {
+      grid-template-columns: 200px minmax(0, var(--maxw));
+    }
+    .article-layout[data-toc-side='left'] .toc-col { order: -1; }
+    .article-layout[data-toc-ready='true'][data-toc-hidden='true'] .toc-restore:not([hidden]) { display: inline-flex; }
+  }
+
   .post-head {
     margin-bottom: 36px;
     padding-bottom: 22px;
@@ -97,6 +434,12 @@ const prev = all[idx - 1];
     border-radius: 4px;
     background: var(--bg-soft);
     color: var(--fg-soft);
+    transition: color .15s ease, background .15s ease;
+  }
+  .tag:hover {
+    color: var(--accent);
+    background: var(--accent-soft);
+    text-decoration: none;
   }
 
   .prose { font-size: inherit; }
@@ -125,6 +468,76 @@ const prev = all[idx - 1];
   .prose :global(li::marker) { color: var(--fg-faint); }
   .prose :global(a) { text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 35%, transparent); }
   .prose :global(a:hover) { text-decoration-color: var(--accent); }
+
+  .toc { font-family: var(--font-ui); }
+  .toc :global(.toc-title) {
+    margin: 0 0 10px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .1em;
+  }
+  .toc :global(ul) {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-left: 2px solid var(--line);
+  }
+  .toc :global(li) { margin: 0; }
+  .toc :global(a) {
+    display: block;
+    margin-left: -2px;
+    padding: 4px 0 4px 14px;
+    border-left: 2px solid transparent;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--fg-soft);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color .15s ease, border-color .15s ease;
+  }
+  .toc :global(a:hover) { color: var(--fg); text-decoration: none; }
+  .toc :global(li.lv3 a) { padding-left: 28px; font-size: 12px; }
+  .toc :global(a.cur) {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    font-weight: 600;
+  }
+
+  .related { margin-top: 48px; }
+  .related-title {
+    margin: 0 0 14px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .1em;
+  }
+  .related-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+  }
+  .related-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 13px 15px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--bg-card);
+    color: var(--fg);
+    transition: all .16s ease;
+  }
+  .related-card:hover {
+    border-color: var(--accent);
+    text-decoration: none;
+    transform: translateY(-2px);
+  }
+  .related-card strong {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  .related-card .mono { font-size: 11px; }
 
   .pager {
     display: grid;

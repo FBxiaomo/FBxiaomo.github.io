@@ -4,6 +4,7 @@ import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import CursorTrail from '@/components/CursorTrail.astro';
 import WordBackground from '@/components/WordBackground.astro';
+import BackToTop from '@/components/BackToTop.astro';
 import { site } from '@/data/site';
 
 interface Props {
@@ -68,6 +69,7 @@ const socialImage = image ? new URL(image, Astro.site).href : undefined;
       <slot />
     </main>
     <Footer />
+    <BackToTop />
 
     <script>
       // ---- 滚动揭示（全局） ----
