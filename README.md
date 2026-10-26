@@ -17,6 +17,11 @@ Astro 静态个人网站，部署在 GitHub Pages。文章统一在 `FBxiaomo/St
 
 头像换成自己的：把图片丢进 `public/`（比如 `public/avatar.jpg`），然后把 `site.ts` 里的 `avatar` 改成 `'/avatar.jpg'`。
 
+关于页轮播里那张 B 站头像：把图片放进 `public/images/`，命名为 `bilibili-avatar.jpg`（`png` / `webp` / `avif` / `svg` 也认，改后缀即可）。
+组件会在构建时自动找到这张图；没有图片时该卡片显示一个占位图标，其它卡片不受影响。图片按 1:1 方形裁切显示，和其它卡片一样大。
+
+这张卡片悬停时会显示 B 站粉丝数。B 站接口不允许跨域，所以数字是**构建时**抓的：本地构建/预览会缓存 6 小时，请求失败就用上一份缓存，再不行就用随程序打包的 `src/data/bilibili.snapshot.json`。站点每 6 小时自动部署时尝试更新（见 `deploy.yml` 的 `cron`）；接口不可用时保留旧数字，卡片会显示该数字的更新时间。想手动刷新兜底数字：`pnpm sync:fans`。UID 在 `site.ts` 的 `bilibiliUid`，改一处，社交链接和粉丝数一起跟着变。
+
 ---
 
 ## 二、写一篇文章

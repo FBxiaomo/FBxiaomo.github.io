@@ -15,6 +15,8 @@ export type Project = {
   featured?: boolean;
   /** 封面图：/images/xxx.jpg。留空会自动用暖色渐变兜底 */
   cover?: string;
+  /** 悬停浮层和弹窗里的大图；不设就用 cover。适合给 logo 类封面单独配一张页面截图 */
+  preview?: string;
 };
 
 export const statusLabel = { active: '维护中', wip: '开发中', archived: '已归档' } as const;
@@ -29,6 +31,7 @@ export const projects: Project[] = [
     external: true,
     featured: true,
     cover: '/images/digital-gallery-cover.png',
+    preview: '/images/digital-gallery-shot.jpg',
   },
   {
     name: '声墨',

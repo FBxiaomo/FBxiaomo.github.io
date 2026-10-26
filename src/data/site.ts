@@ -2,6 +2,9 @@
 //  站点全局信息 —— 想改的地方基本都在这里
 // ============================================================
 
+/** B 站 UID：关于页轮播里的头像卡片与社交链接都用它 */
+const bilibiliUid = '267057576';
+
 export const site = {
   /** 站点名：用在首页欢迎语、页脚、SEO */
   name: '风暴小末',
@@ -25,6 +28,9 @@ export const site = {
   /** 语言 */
   lang: 'zh-CN',
 
+  /** B 站 UID：粉丝数与社交链接都读它 */
+  bilibiliUid,
+
   /** 备案号，没有就留空字符串 */
   icp: '',
   /** 公安备案，没有就留空 */
@@ -33,8 +39,7 @@ export const site = {
   /** 社交链接：想加就加，想删就删 */
   socials: [
     { label: 'GitHub', href: 'https://github.com/FBxiaomo', icon: 'github' },
-    // 补上个人空间 UID 后，即可直接跳转到自己的主页。
-    { label: 'Bilibili', href: 'https://space.bilibili.com/', icon: 'bilibili' },
+    { label: 'Bilibili', href: `https://space.bilibili.com/${bilibiliUid}`, icon: 'bilibili' },
     { label: '订阅', href: '/rss.xml', icon: 'rss' },
   ],
 

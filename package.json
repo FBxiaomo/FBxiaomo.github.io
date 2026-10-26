@@ -11,6 +11,7 @@
     "dev": "node scripts/sync-blog.mjs --prefer-cache && astro dev",
     "start": "node scripts/sync-blog.mjs --prefer-cache && astro dev",
     "sync:blog": "node scripts/sync-blog.mjs",
+    "sync:fans": "node scripts/sync-bilibili.mjs",
     "test:blog": "node --test tests/blog-source.test.mjs",
     "test:cms": "node --test tests/cms.test.mjs",
     "check": "astro check",
